@@ -1,0 +1,713 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Notes Economic Growth and Development</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="118b8200-04a2-4602-8d53-c0d80e25b5f3" class="page sans"><header><h1 class="page-title" dir="auto">Notes Economic Growth and Development</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="d7cd0194-3cc2-4d95-8877-48465a2bd8ee" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#a6a2a372-9525-4727-910b-d3d56a44a88c"><mark class="highlight-blue">1.0 Economic Growth </mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#5d49d25a-6e85-46e7-bdbc-030b0dbe0420"><mark class="highlight-teal">1.1 Meaning and Importance </mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#3e428a12-a38a-4927-be99-148f0a21427e"><mark class="highlight-teal">1.2 Importance of Economic Growth</mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b9169a2-42c0-4de9-9f07-6bec889fbd9f"><mark class="highlight-teal">1.3 Factors Affecting Economic Growth</mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#eeb24058-9c0c-4561-834a-d5e9b02c7dab"><mark class="highlight-teal">1.4 Limitations of Economic Growth</mark></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#7e7eb57f-d024-4d6c-9d80-c832a3129572"><mark class="highlight-blue">2.0 Economic Development</mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#a4dc87b6-3dc5-404b-a534-b15c1ebd2140"><mark class="highlight-teal">2.1 Meaning and Importance </mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#5aa776c8-a0a2-4d59-b82f-2733a636a219"><mark class="highlight-teal">2.2 Evolution of Economic Development</mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#7e084f53-bcaf-4054-8965-6e39e1256efc"><mark class="highlight-teal">2.3 Traditional and Modern Approaches</mark></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#16db175a-c803-4183-ab5d-17e54681c957"><mark class="highlight-blue">3.0 Economic Growth v/s Economic Development</mark></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#7cc337e3-a0b4-4d54-82e0-e9d91a38c3f6"><mark class="highlight-blue">4.0 Economic Development and Structural Changes</mark></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#fef85537-1396-4fef-bd82-2c403ebaa067"><mark class="highlight-blue">5.0 Indices to Measure Economic Development</mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#c5915fa8-b8f1-4e30-993f-c023fa7ac3fb"><mark class="highlight-teal">5.1 Human Development Report and Its Components</mark></a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#4aacdd62-d9a5-41df-b45d-62a4b094e4b4"><mark class="highlight-default">5.1.1 Human Development Index (HDI)</mark></a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#f617a83a-e0c8-4f09-9967-9e42f9aa8594">5.1.2 Inequality-adjusted Human Development Index (IHDI)</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#0275c2ac-44cc-4f52-a890-f7244fa4c9ab">5.1.3 Gender Development Index (GDI)</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#5e44c0ad-0a66-4508-8448-7a65a1b55eaa">5.1.4 Gender Inequality Index (GII)</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#c0dedb85-db76-4348-992e-565b6207647d">5.1.5 Gender Social Norms Index </a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#1c471927-26f5-4f0c-bae2-fdb347ceb1f3">5.1.6 Multidimensional Poverty Index </a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#c884923c-59f9-45d5-a367-dbcf55be9673">5.2 Other Indices to Measure Economic Development </a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#a1499d87-1a01-4c39-bbde-3e125ff30cdd">5.2.1 Genuine Progress Indicator (GPI)</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#e966a8cc-63f7-4051-8ec2-2e4bf77cdf68">5.2.2 World Happiness Index (WHI)</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#897e98a7-e54b-4324-acad-c7f23c1e3467">5.2.3 OECD Better Life Index </a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#07d523e0-5781-4889-bdd5-bdee4972245c">5.2.4 The Physical Quality of Life Index (PQLI)</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#7e614f65-a355-4709-8505-cfcf94fe28e1"><mark class="highlight-blue">6.0 Developed vs Developing Economies</mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#3de00249-5edc-41ea-8e28-7f4b0c2386e6"><mark class="highlight-teal">6.1 Introduction</mark></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#3475a6c2-02a5-45e8-b856-d7fdc40ad597"><mark class="highlight-teal">6.2 Classification of Countries on the Basis of Per Capita Income</mark></a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#0007ed2f-056d-4f26-88cd-ef445270c1fe">6.2.1 Income-based Classification</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#73442159-d96d-4d18-a882-c1c35af8b10c">6.2.2 Development-based Classification</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#03fc3680-6ba2-4edf-90b3-460083809123"><mark class="highlight-teal">6.3 Common Characteristics of Developing Countries</mark></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#6eebd0c7-55f4-4a4f-a16b-8daba17f5062"><mark class="highlight-blue">7.0 Composite Development Index</mark></a></div></nav></div><div style="display:contents" dir="auto"><h1 id="a6a2a372-9525-4727-910b-d3d56a44a88c" class=""><mark class="highlight-blue">1.0 Economic Growth </mark></h1></div><div style="display:contents" dir="auto"><h2 id="5d49d25a-6e85-46e7-bdbc-030b0dbe0420" class=""><mark class="highlight-teal">1.1 Meaning and Importance </mark></h2></div><div style="display:contents" dir="auto"><ul id="288aa493-9b5a-47b2-add2-25d97387799f" class="bulleted-list"><li style="list-style-type:disc">It is an increase in the level of output of goods and services that is sustained over a long period of time, measured in terms of value added.</li></ul></div><div style="display:contents" dir="auto"><ul id="0a9faeba-e073-4354-b775-808cec3937c4" class="bulleted-list"><li style="list-style-type:disc">Economic growth rate = (Change in GDP)/(Last Year’s GDP) x 100</li></ul></div><div style="display:contents" dir="auto"><ul id="9530571a-3fa0-4533-822f-5e012c232f17" class="bulleted-list"><li style="list-style-type:disc">In economics, economic growth theory typically refers to growth of <strong><mark class="highlight-orange_background">potential output</mark></strong> i.e. <strong><mark class="highlight-orange_background">production at full employment</mark></strong>.</li></ul></div><div style="display:contents" dir="auto"><ul id="7d670e1e-2e4e-4d7c-b8b7-bf6cf1ada620" class="bulleted-list"><li style="list-style-type:disc">Process of economic growth is essentially a <strong><mark class="highlight-orange_background">dynamic concept </mark></strong>and refers to a continuous expansion in level of output.</li></ul></div><div style="display:contents" dir="ltr"><figure id="f4cdc67a-a64c-4f6d-a6e5-b8fcf7d99112" class="image"><a href="Untitled.png"><img style="width:384px" src="Untitled.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="ca244ebd-696d-4c11-a656-4a92ac566cf3" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Economic Growth in Commodity Market </strong></mark>- In the commodity markets, economic growth leads to not only increased output but also to newer and, many times, better products. </li></ul></div><div style="display:contents" dir="auto"><ul id="7bd56485-a9a5-4721-b7e1-adffc8cc72e0" class="bulleted-list"><li style="list-style-type:disc"><strong><mark class="highlight-orange_background">Economic Growth in Factor Market </mark></strong>- In the factor markets, economic growth brings improvements in skills of workforce and/or more efficient and/or safer types of machinery.</li></ul></div><div style="display:contents" dir="auto"><ul id="b019d7ba-73e9-457b-8a34-67e6b22a938e" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Economic Growth begets Structural Shift </strong></mark>- The process of economic growth may also lead to structural shifts in an economy. <div style="display:contents" dir="auto"><ul id="1d934436-1afd-490f-96d5-1ab0c4e48234" class="bulleted-list"><li style="list-style-type:circle">We can also say that the source of income generation in an economy shifts from one to another. This means that the economy moves away from being largely rural and agriculture-based economy to urban and industry-dominated economy.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h2 id="3e428a12-a38a-4927-be99-148f0a21427e" class=""><mark class="highlight-teal">1.2 Importance of Economic Growth</mark></h2></div><div style="display:contents" dir="auto"><ul id="7e505ddf-4f99-4879-95ad-3297324f5d96" class="bulleted-list"><li style="list-style-type:disc">Poverty alleviation</li></ul></div><div style="display:contents" dir="auto"><ul id="55583a46-bd4e-40d6-a844-e0d816110bc5" class="bulleted-list"><li style="list-style-type:disc">Wider availability for human choices and economic activities</li></ul></div><div style="display:contents" dir="auto"><ul id="c683e6d5-075f-45e5-bb79-fcb939f2b1c8" class="bulleted-list"><li style="list-style-type:disc">Resolves social issues</li></ul></div><div style="display:contents" dir="auto"><ul id="37e448df-aece-422e-bde9-909d9a42523f" class="bulleted-list"><li style="list-style-type:disc">Improves standard of living</li></ul></div><div style="display:contents" dir="auto"><ul id="44399f5a-258c-4a28-bc61-c8da6d141b88" class="bulleted-list"><li style="list-style-type:disc">Better technology</li></ul></div><div style="display:contents" dir="auto"><h2 id="2b9169a2-42c0-4de9-9f07-6bec889fbd9f" class=""><mark class="highlight-teal">1.3 Factors Affecting Economic Growth</mark></h2></div><div style="display:contents" dir="auto"><ul id="03013ff5-eb61-4a3e-b055-590988a527f3" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Capital Formation (Investment)</strong></mark> - More capital investment in an economy transforms into more production. More production means more economic growth. Hence, increasing investment in an economy also increases the growth of an economy. </li></ul></div><div style="display:contents" dir="auto"><ul id="dc183939-6473-42eb-bd0b-0f3a0fb8f410" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Capital-Output Ratio </strong></mark>- The term &#x27;capital-output ratio&#x27; refers to the number of units of capital that are required in order to produce one unit of output. A lower capital-output ratio typically indicates higher efficiency in producing output with less capital. <div style="display:contents" dir="auto"><ul id="eb996fd1-8a11-4314-ac55-39b502273e07" class="bulleted-list"><li style="list-style-type:circle">A lower capital-output ratio can suggest higher efficiency in utilizing capital for production, which can positively impact economic growth by increasing productivity.</li></ul></div><div style="display:contents" dir="auto"><ul id="3a39ffe8-cd43-4f56-969e-5639f6370736" class="bulleted-list"><li style="list-style-type:circle">A lower ratio might indicate that less capital is required to generate a given level of output, potentially freeing up capital for further investment in other sectors or new technologies, which could spur growth.</li></ul></div><div style="display:contents" dir="auto"><ul id="33d99374-4535-47c3-8802-26107997b787" class="bulleted-list"><li style="list-style-type:circle">Sometimes, a lower capital-output ratio might result from technological advancement or innovation that allows for more output with the same or less capital. This can contribute to sustained economic growth by fostering innovation and progress.</li></ul></div><div style="display:contents" dir="auto"><ul id="c1ad5606-a52a-41f6-bede-a25843439ff7" class="bulleted-list"><li style="list-style-type:circle">There should be an optimal balance between capital and output for sustainable growth. Extremely low capital-output ratios might suggest underinvestment, while extremely high ratios might indicate inefficient use of resources.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="bcf876c9-4476-46ca-addf-5ab1460dfb3a" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Occupational Structure</strong></mark> - Another factor which determines economic growth process is the occupational structure of the working population. The efficient utilization of labor will further boost the overall level of productivity of the economy.</li></ul></div><div style="display:contents" dir="auto"><ul id="e280ff7b-de99-456b-84f9-b880b4f32f1f" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Technological Progress </strong></mark>- Technology makes it possible to produce more from the same quantity of resources (or factors of production). This boosts the potential level of output of the economy.</li></ul></div><div style="display:contents" dir="auto"><h2 id="eeb24058-9c0c-4561-834a-d5e9b02c7dab" class=""><mark class="highlight-teal">1.4 Limitations of Economic Growth</mark></h2></div><div style="display:contents" dir="auto"><ul id="963fab21-7f44-4dea-a927-fd05c2760601" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Inequality of income</strong></mark><strong> -</strong> The unequal distribution of income is the first limitation of economic growth. There is evidence to suggest that, at least in the initial stages of development, economic growth tends to <strong><mark class="highlight-orange_background">worsen the distribution of income</mark></strong>.</li></ul></div><div style="display:contents" dir="auto"><ul id="80e81815-94c8-4148-a1c6-854597b14bf5" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Pollution (and other negative externalities) </strong></mark>- The drive for increased output tends to put more and more pressure on the environment and the result is increased pollution and environmental degradation.</li></ul></div><div style="display:contents" dir="auto"><ul id="864f49cf-465b-4892-8747-d57f06b2b9cf" class="bulleted-list"><li style="list-style-type:disc"><strong><mark class="highlight-orange_background">Loss of non-renewable resources</mark></strong> - The more we want to produce, the more resources we need to do that. This leads to the loss of non-renewable resources.</li></ul></div><div style="display:contents" dir="auto"><h1 id="7e7eb57f-d024-4d6c-9d80-c832a3129572" class=""><mark class="highlight-blue">2.0 Economic Development</mark></h1></div><div style="display:contents" dir="auto"><h2 id="a4dc87b6-3dc5-404b-a534-b15c1ebd2140" class=""><mark class="highlight-teal">2.1 Meaning and Importance </mark></h2></div><div style="display:contents" dir="auto"><ul id="3b305c85-229f-460f-8699-57d41908c2cc" class="bulleted-list"><li style="list-style-type:disc">Economic development refers to a sustained, long-term increase in the economic well-being, standard of living, and overall prosperity of a country or region. It is a broader concept and includes Economic Growth as well because without economic growth, economic development cannot happen.</li></ul></div><div style="display:contents" dir="auto"><ul id="e5a5a493-7267-4761-8456-907480966aa9" class="bulleted-list"><li style="list-style-type:disc">It involves various aspects beyond mere growth in GDP or income and encompasses improvements in the quality of life, reduction of poverty, inequality, and unemployment, as well as advancements in technology, infrastructure, education, healthcare, and social institutions.</li></ul></div><div style="display:contents" dir="auto"><ul id="0c079451-e3eb-4b8d-b43b-a137ab48bab8" class="bulleted-list"><li style="list-style-type:disc">Importance - <div style="display:contents" dir="auto"><ul id="be0bfeb8-c96d-4148-a5e4-c5a1e8a75414" class="bulleted-list"><li style="list-style-type:circle">Improved Quality of Life</li></ul></div><div style="display:contents" dir="auto"><ul id="d383c108-8ff3-4059-9483-00d5a13f3fb6" class="bulleted-list"><li style="list-style-type:circle">Poverty Reduction</li></ul></div><div style="display:contents" dir="auto"><ul id="0d4e5412-a32f-4597-9c06-8060f0a7f9a9" class="bulleted-list"><li style="list-style-type:circle">Enhanced Human Capital</li></ul></div><div style="display:contents" dir="auto"><ul id="f695775b-c8e8-4871-9f45-efade8750ef2" class="bulleted-list"><li style="list-style-type:circle">Increased Employment</li></ul></div><div style="display:contents" dir="auto"><ul id="d97c9151-5be4-472d-9a13-c4665b42c01b" class="bulleted-list"><li style="list-style-type:circle">Stimulated Innovation and Technological Advancement</li></ul></div><div style="display:contents" dir="auto"><ul id="eb881e8e-ea3e-4d40-bd69-7dc1311ccd01" class="bulleted-list"><li style="list-style-type:circle">Infrastructure Development</li></ul></div><div style="display:contents" dir="auto"><ul id="bee1f923-4294-44ee-8c01-4616887b9587" class="bulleted-list"><li style="list-style-type:circle">Social Stability and Equity</li></ul></div><div style="display:contents" dir="auto"><ul id="454005cb-adc5-4aec-aff0-4e4b4e02d78e" class="bulleted-list"><li style="list-style-type:circle">Environmental Sustainability</li></ul></div><div style="display:contents" dir="auto"><ul id="6378ef1e-b786-4bdd-8f1d-1fbe87bafe0c" class="bulleted-list"><li style="list-style-type:circle">Institutional and Political Stability</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h2 id="5aa776c8-a0a2-4d59-b82f-2733a636a219" class=""><mark class="highlight-teal">2.2 Evolution of Economic Development</mark></h2></div><div style="display:contents" dir="auto"><ul id="f9fcdd5b-e938-4b94-97ab-b3e091ccdf7c" class="bulleted-list"><li style="list-style-type:disc">Till 1960s, economic development was often used as a synonym of economic growth.</li></ul></div><div style="display:contents" dir="auto"><ul id="007964a8-074a-46c2-acfa-36bdb7dbccef" class="bulleted-list"><li style="list-style-type:disc">Overtime, two different approaches of measuring Economic Development evolved, which are:<div style="display:contents" dir="auto"><ul id="61158ce8-c372-4dfa-8e3d-d1a8c5bd1a45" class="bulleted-list"><li style="list-style-type:circle"><mark class="highlight-orange_background"><strong>Traditional Approach -</strong></mark><div style="display:contents" dir="auto"><ul id="694e6d8c-49fd-43a5-ba6c-67f0252cf6fb" class="bulleted-list"><li style="list-style-type:square">It opined that economic growth gets converted into economic development</li></ul></div><div style="display:contents" dir="auto"><ul id="9ebaaf5b-6932-4d77-9663-657f0485f213" class="bulleted-list"><li style="list-style-type:square">It believed in sustained annual increase in GDP at the rate of 5 to 7 percent or more</li></ul></div><div style="display:contents" dir="auto"><ul id="e036e103-8ea0-4537-b33f-0f247e5a0d4c" class="bulleted-list"><li style="list-style-type:square">Structural transformation of an agrarian economy into an industrial economy</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="4ccfc39d-a897-4d93-825b-f9479714b5f8" class="bulleted-list"><li style="list-style-type:circle"><mark class="highlight-orange_background"><strong>Modern Approach -</strong></mark><div style="display:contents" dir="auto"><ul id="e0485efa-b4d8-4f35-9e72-2a9e4a8a58e2" class="bulleted-list"><li style="list-style-type:square">It is not limited to measuring economic development vis-a-vis economic growth. It measures economic development on a broader level. </li></ul></div></li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h2 id="7e084f53-bcaf-4054-8965-6e39e1256efc" class=""><mark class="highlight-teal">2.3 Traditional and Modern Approaches</mark></h2></div><div style="display:contents" dir="auto"><ul id="91c8387d-8278-4a7f-a4a6-56c4fddefb9d" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>Traditional Approach </strong></mark>- The traditional approach to economic development primarily focused on achieving growth in a nation&#x27;s Gross Domestic Product (GDP) as the primary indicator of progress. <div style="display:contents" dir="auto"><ul id="3dff1912-5c2c-4956-b6f3-1f6f0d74a20f" class="bulleted-list"><li style="list-style-type:circle">This approach, prevalent until the mid-20th century, emphasized industrialization, capital accumulation, and increasing output as the means to promote development.</li></ul></div><div style="display:contents" dir="auto"><ul id="856ada7e-37f1-4b8a-bbb4-6e49af1d1863" class="bulleted-list"><li style="list-style-type:circle">It is assumed that the benefit of changes in GDP would trickle down to people in one form or another. This is known as the <strong><mark class="highlight-orange_background">‘trickle-down effect’.</mark></strong></li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="1258d8b5-d7e2-44cb-89e4-5a378adb2142" class="bulleted-list"><li style="list-style-type:disc">Key features of the traditional approach to economic development include:</li></ul></div><div style="display:contents" dir="ltr"><figure id="4ae8cefe-8947-434e-87b9-17a264f2f51d" class="image"><a href="Untitled%201.png"><img style="width:816px" src="Untitled%201.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="849e1f38-0c50-498f-a334-65ad51a30982" class="bulleted-list"><li style="list-style-type:disc"><strong><mark class="highlight-orange_background">Modern Approach </mark></strong>- The modern approach to economic development encompasses a more comprehensive and multidimensional perspective, recognizing that economic growth alone does not guarantee overall development. This approach emphasizes a broader set of goals and strategies to achieve sustainable and inclusive development.</li></ul></div><div style="display:contents" dir="auto"><ul id="e67d4560-b62c-46e2-9b3d-684b081aa734" class="bulleted-list"><li style="list-style-type:disc">Some of the key aspects of the modern approach: </li></ul></div><div style="display:contents" dir="ltr"><figure id="c01d1b88-77b8-46db-9b18-760a6bf8932d" class="image"><a href="Screenshot_2023-12-11_114429.png"><img style="width:935.3055419921875px" src="Screenshot_2023-12-11_114429.png"/></a></figure></div><div style="display:contents" dir="auto"><h1 id="16db175a-c803-4183-ab5d-17e54681c957" class=""><mark class="highlight-blue">3.0 Economic Growth v/s Economic Development</mark></h1></div><div style="display:contents" dir="ltr"><table id="d6d04ead-b6e1-460d-8029-38014f8b9819" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="468e3a12-916c-4452-9fc9-56922a93c70b"><th id="|HB]" class="simple-table-header-color simple-table-header" style="width:134px"><strong>Basis of Distinction</strong></th><th id="Nmn&gt;" class="simple-table-header-color simple-table-header" style="width:297px"><strong>Economic growth</strong></th><th id="_cp&gt;" class="simple-table-header-color simple-table-header" style="width:343px"><strong>Economic development</strong></th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="62af99f3-8cc5-4c16-b5c4-90fb87087266"><td id="|HB]" class="" style="width:134px"><strong>Meaning</strong></td><td id="Nmn&gt;" class="" style="width:297px">It is an increase in the level of output of goods and services that is sustained over a long period of time.</td><td id="_cp&gt;" class="" style="width:343px">Economic development can be referred as the quantitative and qualitative changes in the economy.</td></tr></div><div style="display:contents" dir="ltr"><tr id="a765c603-db05-4495-a2e5-77b651da2006"><td id="|HB]" class="block-color-blue_background" style="width:134px"><strong>Parameters</strong></td><td id="Nmn&gt;" class="block-color-blue_background" style="width:297px">Economic growth is measured in terms of rise in GDP or market productivity.</td><td id="_cp&gt;" class="block-color-blue_background" style="width:343px">Economic development focuses on the spectrum of spheres ranging from health, education, employment, safety, environmental sustainability, social exclusion, gender empowerment, infrastructure, and other activities.</td></tr></div><div style="display:contents" dir="ltr"><tr id="3ed434a1-c900-4bbe-9be2-54482c26e11e"><td id="|HB]" class="" style="width:134px"><strong>Nature</strong></td><td id="Nmn&gt;" class="" style="width:297px">It takes into account quantitative changes only.</td><td id="_cp&gt;" class="" style="width:343px">It takes into account both quantitative and qualitative aspects of improvement.</td></tr></div><div style="display:contents" dir="ltr"><tr id="1225ab98-b261-445f-97b9-ecedb5468d05"><td id="|HB]" class="block-color-blue_background" style="width:134px"><strong>Scope</strong></td><td id="Nmn&gt;" class="block-color-blue_background" style="width:297px">The scope of economic growth is narrow.</td><td id="_cp&gt;" class="block-color-blue_background" style="width:343px">The scope of economic development is broad.</td></tr></div><div style="display:contents" dir="ltr"><tr id="5db3939b-188b-496b-a380-c7319f49721d"><td id="|HB]" class="" style="width:134px"><strong>Measurement</strong></td><td id="Nmn&gt;" class="" style="width:297px">To measure the economic growth, GDP, GNP, etc. are considered.</td><td id="_cp&gt;" class="" style="width:343px">To measure the economic development HDI, Gender inequality index, gender development Index etc. are considered.</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h1 id="7cc337e3-a0b4-4d54-82e0-e9d91a38c3f6" class=""><mark class="highlight-blue">4.0 Economic Development and Structural Changes</mark></h1></div><div style="display:contents" dir="auto"><ul id="e7f1244a-e5f8-43dc-af07-99dc2ac96a0e" class="bulleted-list"><li style="list-style-type:disc">Econometricians have attempted to measure structural changes in economies as development proceeds.</li></ul></div><div style="display:contents" dir="auto"><ul id="1cf6bc5c-3c96-4e6f-81fd-845633f38deb" class="bulleted-list"><li style="list-style-type:disc">Much of the pioneering work in this field was done by <strong><mark class="highlight-orange_background">Prof. Simon Kuznets</mark></strong> on the basis of <strong><mark class="highlight-orange_background">historical data</mark></strong>.</li></ul></div><div style="display:contents" dir="auto"><ul id="4f051c25-69ca-4cae-82bb-0eb36cc58473" class="bulleted-list"><li style="list-style-type:disc"><strong><mark class="highlight-orange_background">Hollis Chenery</mark></strong> extended and refined the study of structural changes in an economy by using <mark class="highlight-orange_background"><strong>current data.</strong></mark></li></ul></div><div style="display:contents" dir="ltr"><figure class="block-color-pink_background callout" style="white-space:pre-wrap;display:flex" id="97f87278-a11d-4cd5-9bc7-5bacec7a7641"><div style="font-size:1.5em"><span class="icon">📌</span></div><div style="width:100%"><strong>List of Important Structural Changes Begotten by Economic Development</strong></div></figure></div><div style="display:contents" dir="ltr"><figure id="5fca644a-b974-4518-bf74-9430b66081bc" class="image"><a href="Untitled%202.png"><img style="width:864px" src="Untitled%202.png"/></a></figure></div><div style="display:contents" dir="auto"><h1 id="fef85537-1396-4fef-bd82-2c403ebaa067" class=""><mark class="highlight-blue">5.0 Indices to Measure Economic Development</mark></h1></div><div style="display:contents" dir="auto"><h2 id="c5915fa8-b8f1-4e30-993f-c023fa7ac3fb" class=""><mark class="highlight-teal">5.1 Human Development Report and Its Components</mark></h2></div><div style="display:contents" dir="ltr"><figure id="0a824385-4c6b-4b8d-9c40-9c9bcece3fc9" class="image"><a href="Untitled%203.png"><img style="width:816px" src="Untitled%203.png"/></a></figure></div><div style="display:contents" dir="auto"><h3 id="4aacdd62-d9a5-41df-b45d-62a4b094e4b4" class=""><mark class="highlight-default">5.1.1 Human Development Index (HDI)</mark></h3></div><div style="display:contents" dir="auto"><ul id="6a56199c-b20e-4733-87db-06cbb6494c89" class="bulleted-list"><li style="list-style-type:disc"><strong>Origin </strong>- 1990</li></ul></div><div style="display:contents" dir="auto"><ul id="4d3caaa0-25f0-45f2-ad8f-dd8219499bda" class="bulleted-list"><li style="list-style-type:disc"><strong>Released by </strong>- United Nations Development Program</li></ul></div><div style="display:contents" dir="auto"><ul id="625048f2-a035-476d-9761-11af8e5c492f" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose </strong>- to emphasize that people and their capabilities should be the ultimate criteria for assessing the development of a country, not economic growth alone</li></ul></div><div style="display:contents" dir="auto"><ul id="a4853388-3eec-474c-b389-19b4de937afa" class="bulleted-list"><li style="list-style-type:disc"><strong>Components of HDI </strong>-</li></ul></div><div style="display:contents" dir="ltr"><figure id="e307efad-f48d-47c1-b8e7-6434e2fdaff5" class="image"><a href="Untitled%204.png"><img style="width:768px" src="Untitled%204.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="13e1489a-3a9f-44da-85a0-fb822e3068a8" class="bulleted-list"><li style="list-style-type:disc"><strong>Coverage </strong>- 191 countries <mark class="highlight-red">[subject to change]</mark></li></ul></div><div style="display:contents" dir="auto"><ul id="076c5dc2-15a4-43bd-a1f5-5ceed42d6a0f" class="bulleted-list"><li style="list-style-type:disc"><strong>Index value </strong>- The index value of HDI varies between 0 (the lowest human development) to 1 (highest human development).</li></ul></div><div style="display:contents" dir="auto"><h3 id="f617a83a-e0c8-4f09-9967-9e42f9aa8594" class="">5.1.2 Inequality-adjusted Human Development Index (IHDI)</h3></div><div style="display:contents" dir="auto"><ul id="692073e4-7a34-462b-b0e9-873c6dd841bc" class="bulleted-list"><li style="list-style-type:disc"><strong>Origin </strong>- 2010</li></ul></div><div style="display:contents" dir="auto"><ul id="bc8889c1-bbf8-4b9c-acb5-9a3aecbdfaed" class="bulleted-list"><li style="list-style-type:disc"><strong>Released by </strong>- United Nations Development Program</li></ul></div><div style="display:contents" dir="auto"><ul id="4ce2ad56-4456-409b-966a-f9a03c9cc209" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose </strong>- The Inequality-adjusted Human Development Index (IHDI) is a distinct and separate index that is related to the Human Development Index (HDI) but incorporates a correction factor for inequality within a country. <div style="display:contents" dir="auto"><ul id="b99ecf7b-4d41-4054-8bf9-57757c7aeecb" class="bulleted-list"><li style="list-style-type:circle">While they are related and share similarities, the IHDI and HDI serve different purposes in evaluating human development.</li></ul></div><div style="display:contents" dir="auto"><ul id="d755e919-e81e-4bd0-8cc1-7e515a12b5ce" class="bulleted-list"><li style="list-style-type:circle">The HDI provides for the <mark class="highlight-orange_background"><strong>overall achievements </strong></mark>of a country in health, education, and standard of living while the IHDI provides a more comprehensive assessment of human development by considering not only the average achievements but also the <mark class="highlight-orange_background"><strong>distribution of these achievements</strong></mark> among the population.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="96f27a97-c060-406e-8460-bf0632cecc6d" class="bulleted-list"><li style="list-style-type:disc"><strong>Components of IHDI - </strong></li></ul></div><div style="display:contents" dir="ltr"><figure id="5442b585-b000-4024-850a-e1ed00f10b35" class="image"><a href="Untitled%205.png"><img style="width:768px" src="Untitled%205.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="28ba6942-3771-439d-88ce-e3c864c78d30" class="bulleted-list"><li style="list-style-type:disc"><strong>Coverage </strong>- The number of countries assessed in the Inequality-adjusted Human Development Index (IHDI) is generally the same as those assessed in the Human Development Index (HDI).<div style="display:contents" dir="auto"><ul id="906132b7-3524-4ad2-934c-4e75c52a269b" class="bulleted-list"><li style="list-style-type:circle">However, the adjustment for inequality requires additional data, and in some cases, there might be missing or insufficient data to calculate the IHDI for all countries.</li></ul></div><div style="display:contents" dir="auto"><ul id="89b3a122-9abb-4a3a-82cf-069a70a7ba35" class="bulleted-list"><li style="list-style-type:circle">While the intention is to cover the same set of countries in both the HDI and IHDI, limitations in available data may result in differences in the final number of countries for which both indices can be accurately calculated and reported.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="0275c2ac-44cc-4f52-a890-f7244fa4c9ab" class="">5.1.3 Gender Development Index (GDI)</h3></div><div style="display:contents" dir="auto"><ul id="81abb00c-5d85-4e31-972b-32f2ecfa885f" class="bulleted-list"><li style="list-style-type:disc"><strong>Origin </strong>- 1990</li></ul></div><div style="display:contents" dir="auto"><ul id="fbe102aa-970d-4b69-ac27-dc721c1b1605" class="bulleted-list"><li style="list-style-type:disc"><strong>Released by </strong>- United Nations Development Program</li></ul></div><div style="display:contents" dir="auto"><ul id="bb540f06-9d00-4732-b994-61fbd82246a3" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose </strong>- To measure the achievements of a nation across health, education, and standard of living dimensions and its accessibility to males and females.<div style="display:contents" dir="auto"><ul id="f06e0b3d-1d64-495b-a8b9-8451c3aad6fa" class="bulleted-list"><li style="list-style-type:circle"><strong>Health </strong>- measured by female and male life expectancy at birth; </li></ul></div><div style="display:contents" dir="auto"><ul id="0b363112-8d94-459a-8638-379529c31875" class="bulleted-list"><li style="list-style-type:circle"><strong>Education </strong>- measured by female and male expected years of schooling for children and female and male mean years of schooling for adults ages 25 years and older; </li></ul></div><div style="display:contents" dir="auto"><ul id="e72c90d6-d01e-48ab-80c7-5cb76c52d7b2" class="bulleted-list"><li style="list-style-type:circle"><strong>Command over Economic Resources </strong>- measured by female and male estimated earned income </li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="de802596-9852-49d2-9283-98d62412b65b" class="bulleted-list"><li style="list-style-type:disc"><strong>Components </strong>- </li></ul></div><div style="display:contents" dir="ltr"><figure id="2652284e-69cc-42eb-bf7e-5067c9656c25" class="image"><a href="Screenshot_2023-12-11_153014.png"><img style="width:768px" src="Screenshot_2023-12-11_153014.png"/></a></figure></div><div style="display:contents" dir="auto"><p id="21c0b3f3-9191-4996-be4b-0110615e17b6" class="block-color-red">Note: Pay attention to male and female categories in each dimension.</p></div><div style="display:contents" dir="auto"><ul id="6936ef3a-145f-442a-ac2e-4dd0f5ac0ed8" class="bulleted-list"><li style="list-style-type:disc"><strong>Coverage </strong>- Typically, the number of countries assessed in the GDI is the same as or very similar to the number of countries assessed in the HDI because both indices are part of the same report and use the same dataset provided by the UNDP.<div style="display:contents" dir="auto"><ul id="337243a8-d12d-42d7-b8c0-7911c026a416" class="bulleted-list"><li style="list-style-type:circle">However, variations might occur due to data availability and quality issues, which can affect the calculation and inclusion of certain countries in either index.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="5e44c0ad-0a66-4508-8448-7a65a1b55eaa" class="">5.1.4 Gender Inequality Index (GII)</h3></div><div style="display:contents" dir="auto"><ul id="78035f21-dfb7-4d98-83b1-ce227010e5ab" class="bulleted-list"><li style="list-style-type:disc"><strong>Origin </strong>- 1990</li></ul></div><div style="display:contents" dir="auto"><ul id="9eaca8c2-2b00-4fc1-bd06-85b1f0652510" class="bulleted-list"><li style="list-style-type:disc"><strong>Released by</strong> - United Nations Development Report</li></ul></div><div style="display:contents" dir="auto"><ul id="8fe04656-ff60-4c25-8412-dc68a3191e73" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose </strong>- GII reflects gender-based disadvantage in three dimensions— reproductive health, empowerment and the labor market.<div style="display:contents" dir="auto"><ul id="56eaa7fc-8f11-4f5b-8385-97d06347e153" class="bulleted-list"><li style="list-style-type:circle">It shows the <strong><mark class="highlight-orange_background">loss in potential human development due to inequality</mark></strong> between female and male achievements in these dimensions.</li></ul></div><div style="display:contents" dir="auto"><ul id="4b8a347b-be60-4ad9-af8a-344546096dce" class="bulleted-list"><li style="list-style-type:circle">It ranges from <strong><mark class="highlight-orange_background">0</mark></strong>, where women and men fare equally, to <mark class="highlight-orange_background"><strong>1</strong></mark>, where one gender fares as poorly as possible in all measured dimensions. Hence, a lower value means a better performance of a country.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="489d373c-f2ad-4fb3-b947-6c387d901c85" class="bulleted-list"><li style="list-style-type:disc"><strong>Components </strong>-</li></ul></div><div style="display:contents" dir="ltr"><figure id="f03bf35c-f092-4c60-901f-eea0f12a71ed" class="image"><a href="Untitled%206.png"><img style="width:935.3055419921875px" src="Untitled%206.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="8d8d41c6-10b7-45e6-964f-75bb9013e7e9" class="bulleted-list"><li style="list-style-type:disc"><strong>Structure of the index </strong>- <div style="display:contents" dir="auto"><ul id="9f6309b5-e0ff-40d5-9978-a0c2176bf1a2" class="bulleted-list"><li style="list-style-type:circle"><strong>Female Gender Index</strong> - It is made up of female reproductive health index, female empowerment index, and female labor market index.</li></ul></div><div style="display:contents" dir="auto"><ul id="7e2ff197-3aab-451f-9af9-cbf1836e620b" class="bulleted-list"><li style="list-style-type:circle"><strong>Male Gender Index </strong>- It is made up of male empowerment index (male population with secondary education and male seats in parliament) and male labor market index (male labor force participation rate).</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="368bfa0b-0b3b-43cd-8837-1a8a102c08c7" class="bulleted-list"><li style="list-style-type:disc"><strong>Coverage </strong>- Typically, the number of countries assessed in the GII is the same as or very similar to the number of countries assessed in the HDI because both indices are part of the same report and use the same dataset provided by the UNDP.<div style="display:contents" dir="auto"><ul id="b174fc93-26bf-45b3-91bc-7556152b7065" class="bulleted-list"><li style="list-style-type:circle">However, variations might occur due to data availability and quality issues, which can affect the calculation and inclusion of certain countries in either index.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="c0dedb85-db76-4348-992e-565b6207647d" class="">5.1.5 Gender Social Norms Index </h3></div><div style="display:contents" dir="auto"><ul id="ad318397-2c27-4ce0-a805-58c84fd9cbd6" class="bulleted-list"><li style="list-style-type:disc"><strong>Origin </strong>- 2019</li></ul></div><div style="display:contents" dir="auto"><ul id="a63e84eb-647c-446b-9fda-33932ea9cfb1" class="bulleted-list"><li style="list-style-type:disc"><strong>Released by</strong> - United Nation Development Program</li></ul></div><div style="display:contents" dir="auto"><ul id="8e799cce-4a5b-4321-9736-b507204a1552" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose </strong>- The Gender Social Norms Index (GSNI) quantifies biases against women, capturing people’s attitudes on women’s roles along four key dimensions: political, educational, economic and physical integrity.<div style="display:contents" dir="auto"><ul id="dc9bf3a8-6ba1-4c99-8237-d7fd64221b39" class="bulleted-list"><li style="list-style-type:circle">Without tackling biased gender social norms, we will not achieve gender equality or the Sustainable Development Goals. Biased gender social norms—the undervaluation of women’s capabilities and rights in society—constrain women’s choices and opportunities by regulating behavior and setting the boundaries of what women are expected to do and be. </li></ul></div><div style="display:contents" dir="auto"><ul id="ad518e1a-6de1-41aa-8cda-f258c2a7dfb2" class="bulleted-list"><li style="list-style-type:circle">Biased gender social norms are a major impediment to achieving gender equality and empowering all women and girls</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="062d6a5b-a7a1-4054-8dd8-04ba41e3e070" class="bulleted-list"><li style="list-style-type:disc"><strong>Components </strong>- </li></ul></div><div style="display:contents" dir="ltr"><figure id="0c87ba72-b513-404d-a918-08222dbbae23" class="image"><a href="Untitled%207.png"><img style="width:935.2916870117188px" src="Untitled%207.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="d6c88d20-c5b9-4823-a482-cc883fbca423" class="bulleted-list"><li style="list-style-type:disc"><strong>Coverage</strong> - 91 countries <mark class="highlight-red">[subject to change]</mark></li></ul></div><div style="display:contents" dir="auto"><h3 id="1c471927-26f5-4f0c-bae2-fdb347ceb1f3" class="">5.1.6 Multidimensional Poverty Index </h3></div><div style="display:contents" dir="auto"><ul id="eecef51d-f875-45b6-ada2-cb9a3e4865c5" class="bulleted-list"><li style="list-style-type:disc"><strong>Origin </strong>- 2010</li></ul></div><div style="display:contents" dir="auto"><ul id="5d40579e-e9cd-4bdf-9993-12ada34448de" class="bulleted-list"><li style="list-style-type:disc"><strong>Released by</strong> - Oxford Poverty and Human Development Initiative (OPHI) and UN Development Program (UNDP)</li></ul></div><div style="display:contents" dir="auto"><ul id="47dc1ec2-569d-4f34-b4ab-0cd6702108d7" class="bulleted-list"><li style="list-style-type:disc"><strong>Publication </strong>- Annual in Human Development Report</li></ul></div><div style="display:contents" dir="auto"><ul id="a2660ff4-508c-405e-99ba-f26045cf69e1" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose </strong>- The MPI is a high resolution lens on poverty. Knowing not just who is poor but how they are poor is essential for effective human development program and policies. It is useful because - <div style="display:contents" dir="auto"><ul id="d0609250-5056-4d0f-b66c-79b35e682d97" class="bulleted-list"><li style="list-style-type:circle">It shows all the deprivations</li></ul></div><div style="display:contents" dir="auto"><ul id="d3d60d7a-0ecb-4dcf-83b7-d52d4325b756" class="bulleted-list"><li style="list-style-type:circle">Identify the poorest people</li></ul></div><div style="display:contents" dir="auto"><ul id="c03b31fa-6e57-4a7c-b810-c74d055cfeb7" class="bulleted-list"><li style="list-style-type:circle">Show which deprivation combinations are most common</li></ul></div><div style="display:contents" dir="auto"><ul id="73ddea53-eb04-4986-8700-82a66de7d4f7" class="bulleted-list"><li style="list-style-type:circle">Reflect the results of effective policy interventions quickly</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="1f1726a3-0fe9-4286-80cf-e9b461e5204f" class="bulleted-list"><li style="list-style-type:disc"><strong>Components </strong>- </li></ul></div><div style="display:contents" dir="ltr"><figure id="faf73e2f-56b0-4949-9ee2-df37bf40fe21" class="image"><a href="Untitled%208.png"><img style="width:935.3194580078125px" src="Untitled%208.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="3aa28b51-383d-4cf3-8a72-3a0ba4ad2d73" class="bulleted-list"><li style="list-style-type:disc"><strong>Structure of the index </strong>- </li></ul></div><div style="display:contents" dir="ltr"><figure id="f06a0698-30a5-4ffe-95c2-19b9adc3475f" class="image"><a href="Untitled%209.png"><img style="width:935.3194580078125px" src="Untitled%209.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="b0e82074-54c6-4de7-a886-9aaaf65efdd6" class="bulleted-list"><li style="list-style-type:disc"><strong>Coverage </strong>- Nearly 100 countries <mark class="highlight-red">[subject to change]</mark></li></ul></div><div style="display:contents" dir="auto"><h2 id="c884923c-59f9-45d5-a367-dbcf55be9673" class="block-color-teal">5.2 Other Indices to Measure Economic Development </h2></div><div style="display:contents" dir="auto"><h3 id="a1499d87-1a01-4c39-bbde-3e125ff30cdd" class="">5.2.1 Genuine Progress Indicator (GPI)</h3></div><div style="display:contents" dir="auto"><ul id="60217cb0-3b1b-43dd-b1fb-29e52e38c9ab" class="bulleted-list"><li style="list-style-type:disc"><strong>Meaning - </strong>The Genuine Progress Indicator (GPI) is an alternative metric to Gross Domestic Product (GDP) that attempts to measure economic progress, well-being, and sustainability. <div style="display:contents" dir="auto"><ul id="3b45025c-ef13-48b0-a2b1-33646c25818f" class="bulleted-list"><li style="list-style-type:circle">It was developed as a response to the limitations of GDP as a sole measure of a country&#x27;s economic performance.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="22d4edbf-49ac-4171-8365-d8764a2a4630" class="bulleted-list"><li style="list-style-type:disc"><strong>GDP vs GPI</strong> - GDP measures the total monetary value of all finished goods and services produced within a country&#x27;s borders in a specific time period. <div style="display:contents" dir="auto"><ul id="6af1ac23-4004-4e7c-89b8-5def012fd5b3" class="bulleted-list"><li style="list-style-type:circle">However, it does not consider factors such as income distribution, environmental degradation, household work, volunteer work, and social factors, among others.</li></ul></div><div style="display:contents" dir="auto"><ul id="6a107f6a-f870-420e-b82a-5809e644defb" class="bulleted-list"><li style="list-style-type:circle">The Genuine Progress Indicator seeks to address these limitations by considering a broader range of economic, social, and environmental factors in its calculation.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="3bacd8c4-d85b-4c6b-adb6-5b2031c676f6" class="bulleted-list"><li style="list-style-type:disc"><strong>Released by</strong> - There isn&#x27;t a single central authority or organization responsible for releasing the GPI for all countries.<div style="display:contents" dir="auto"><ul id="f9d83bdc-e3dc-48ee-9277-d2eca85630fe" class="bulleted-list"><li style="list-style-type:circle">The GPI was conceptualized and developed by researchers to provide a more comprehensive measure of societal progress that goes beyond the limitations of GDP. </li></ul></div><div style="display:contents" dir="auto"><ul id="f7af1019-507d-49fd-ac95-07ab145fdcb5" class="bulleted-list"><li style="list-style-type:circle">Several independent research institutions, non-governmental organizations (NGOs), and academic entities have been involved in calculating and publishing GPI values for specific regions, countries, or localities.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="e966a8cc-63f7-4051-8ec2-2e4bf77cdf68" class="">5.2.2 World Happiness Index (WHI)</h3></div><div style="display:contents" dir="auto"><ul id="cb98b297-c709-423c-98c2-76f37f378e73" class="bulleted-list"><li style="list-style-type:disc"><strong>Origin </strong>- 2012</li></ul></div><div style="display:contents" dir="auto"><ul id="c3ac8d23-c876-4205-804f-9523a0699a55" class="bulleted-list"><li style="list-style-type:disc"><strong>Released by</strong> - UN Sustainable Development Solutions Network</li></ul></div><div style="display:contents" dir="auto"><ul id="7bb52c7d-4e3b-4bfa-88ed-469e35a6aaef" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose </strong>- Success of countries should be judged by the happiness of their people. Countries have also come to a consensus on how to quantifiably measure happiness. </li></ul></div><div style="display:contents" dir="auto"><ul id="5ff6516d-d342-45fd-9f15-a22f25e155ea" class="bulleted-list"><li style="list-style-type:disc"><strong>Components </strong>-</li></ul></div><div style="display:contents" dir="ltr"><figure id="a3554abe-7d9b-48d2-8610-4c4e13e36c3c" class="image"><a href="Untitled%2010.png"><img style="width:384px" src="Untitled%2010.png"/></a></figure></div><div style="display:contents" dir="auto"><h3 id="897e98a7-e54b-4324-acad-c7f23c1e3467" class="">5.2.3 OECD Better Life Index </h3></div><div style="display:contents" dir="auto"><ul id="84d31a09-e5d1-4637-ac96-025f903f1cdc" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose </strong>- The OECD Better Life Index is designed to provide a broader perspective on what constitutes a good life beyond economic indicators like Gross Domestic Product (GDP).</li></ul></div><div style="display:contents" dir="auto"><ul id="168f70c8-2002-4ef5-bf50-41000b20975f" class="bulleted-list"><li style="list-style-type:disc"><strong>Components </strong>-</li></ul></div><div style="display:contents" dir="ltr"><figure id="a4cffc22-757e-4ab2-846a-5932dffeb507" class="image"><a href="Untitled%2011.png"><img style="width:288px" src="Untitled%2011.png"/></a></figure></div><div style="display:contents" dir="auto"><ul id="826379ea-998e-452f-96b1-71701194c9e7" class="bulleted-list"><li style="list-style-type:disc"><strong>Ranking </strong>- The Better Life Index doesn&#x27;t provide a single ranking but rather allows users to create their own personalized index by giving different weights to these 11 dimensions.<div style="display:contents" dir="auto"><ul id="a906ae30-6417-479a-a363-f7886ca35b5a" class="bulleted-list"><li style="list-style-type:circle">Individuals can use the Better Life Index tool available on the OECD website to customize and weigh these topics according to their personal preferences and values. </li></ul></div><div style="display:contents" dir="auto"><ul id="ad942d91-e071-4272-a7c8-6cf11befee40" class="bulleted-list"><li style="list-style-type:circle">They can then compare countries&#x27; performances based on these preferences, allowing users to see how different countries fare in areas that matter most to them.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="07d523e0-5781-4889-bdd5-bdee4972245c" class="">5.2.4 The Physical Quality of Life Index (PQLI)</h3></div><div style="display:contents" dir="auto"><ul id="c0358437-1880-41bd-a090-86dd928ccb57" class="bulleted-list"><li style="list-style-type:disc"><strong>Origin </strong>- The Physical Quality of Life Index (PQLI) was a composite measure developed by the economist <mark class="highlight-orange_background"><strong>Morris David Morris </strong></mark>in the 1970s as an attempt to assess the overall quality of life in different countries. </li></ul></div><div style="display:contents" dir="auto"><ul id="dfe2eed0-7d99-4aa4-ad64-52a1cd04061d" class="bulleted-list"><li style="list-style-type:disc"><strong>Components </strong>- <div style="display:contents" dir="auto"><ul id="916006c8-7a3e-4b2b-85dc-35189bef15a7" class="bulleted-list"><li style="list-style-type:circle"><strong><mark class="highlight-orange_background">Basic Literacy Rate</mark></strong>: The percentage of adults in a country who could read and write.</li></ul></div><div style="display:contents" dir="auto"><ul id="313bb4e2-9366-4a2d-bd24-10106fb56e6f" class="bulleted-list"><li style="list-style-type:circle"><strong><mark class="highlight-orange_background">Life Expectancy at Age 1</mark></strong>: The average number of years a newborn could expect to live if the prevailing mortality patterns remained the same throughout its life.</li></ul></div><div style="display:contents" dir="auto"><ul id="9b49c8e7-5642-4d11-bcf0-67bc96197717" class="bulleted-list"><li style="list-style-type:circle"><strong><mark class="highlight-orange_background">Infant Mortality Rate</mark></strong>: The number of deaths of infants under one year old per 1,000 live births.</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><ul id="5ef26ced-0d89-465a-8285-43ce8342835a" class="bulleted-list"><li style="list-style-type:disc"><strong>Score Range </strong>- The PQLI scores ranged from 0 to 100, with higher scores indicating a better overall quality of life.</li></ul></div><div style="display:contents" dir="auto"><h1 id="7e614f65-a355-4709-8505-cfcf94fe28e1" class=""><mark class="highlight-blue">6.0 Developed vs Developing Economies</mark></h1></div><div style="display:contents" dir="auto"><h2 id="3de00249-5edc-41ea-8e28-7f4b0c2386e6" class=""><mark class="highlight-teal">6.1 Introduction</mark></h2></div><div style="display:contents" dir="auto"><ul id="cc21dd67-0192-461c-9ce8-3db83411ea90" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-orange_background"><strong>World Bank’s World Development Report </strong></mark>categorizes economies in three categories on the basis of income, which are high income, middle income and low income economies.</li></ul></div><div style="display:contents" dir="auto"><ul id="86740c67-fe57-46c2-82a5-21d79ac958c3" class="bulleted-list"><li style="list-style-type:disc">Usually, <strong><mark class="highlight-orange_background">high income countries </mark></strong>are known as <strong><mark class="highlight-orange_background">developed/advanced economies</mark></strong> while <strong><mark class="highlight-orange_background">low income countries </mark></strong>are known as <strong><mark class="highlight-orange_background">underdeveloped economies</mark></strong>.</li></ul></div><div style="display:contents" dir="auto"><ul id="c6324ebb-4f9b-4a40-b899-7be6e8a80b41" class="bulleted-list"><li style="list-style-type:disc">Developed or advanced economies are also characterized by high standard of living, universal and quality education, better health care facilities and high life expectancy.</li></ul></div><div style="display:contents" dir="auto"><ul id="ae72ed8d-f37a-4131-9b8d-d72756ed73c2" class="bulleted-list"><li style="list-style-type:disc">Further, the <mark class="highlight-orange_background"><strong>underdeveloped economies</strong></mark> showing high potential of growth in terms of their natural, physical and human resources are often referred to as <mark class="highlight-orange_background"><strong>developing economies</strong></mark>. </li></ul></div><div style="display:contents" dir="auto"><ul id="5efc6094-17e0-4cea-ac3c-fcff3eb449f6" class="bulleted-list"><li style="list-style-type:disc">Economists also use the terms, <mark class="highlight-orange_background"><strong>first world, second world </strong></mark>and <mark class="highlight-orange_background"><strong>third world </strong></mark>for the developed, socialist, industrialist countries and underdeveloped economies respectively.</li></ul></div><div style="display:contents" dir="auto"><h2 id="3475a6c2-02a5-45e8-b856-d7fdc40ad597" class=""><mark class="highlight-teal">6.2 Classification of Countries on the Basis of Per Capita Income</mark></h2></div><div style="display:contents" dir="auto"><h3 id="0007ed2f-056d-4f26-88cd-ef445270c1fe" class="">6.2.1 Income-based Classification</h3></div><div style="display:contents" dir="auto"><ul id="745db5ec-ec9e-494b-a6d9-cdde426c48b2" class="bulleted-list"><li style="list-style-type:disc"><strong>World Bank </strong>has classified economies into <strong>four categories</strong> for the <strong>current 2024 fiscal year</strong> - </li></ul></div><div style="display:contents" dir="ltr"><table id="95ee15e6-b093-4183-b73f-8f3bef4c6154" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="d13e71ad-85c7-4be9-8e39-072f8fb56933"><th id="b[XD" class="simple-table-header-color simple-table-header" style="width:349px">Category</th><th id="[^]G" class="simple-table-header-color simple-table-header" style="width:349px">GNI Per Capita Income (in US $)</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="8c18dd0c-a08c-4d71-b9ca-330683ccc3bd"><td id="b[XD" class="" style="width:349px">Low income</td><td id="[^]G" class="" style="width:349px">$1,135 or less in 2022</td></tr></div><div style="display:contents" dir="ltr"><tr id="9ae68023-d662-4ef6-a5e9-f85df88b928f"><td id="b[XD" class="block-color-blue_background" style="width:349px">Low middle income</td><td id="[^]G" class="block-color-blue_background" style="width:349px">$1,136 and $4,465</td></tr></div><div style="display:contents" dir="ltr"><tr id="532e58f3-6107-42c5-9e3f-6544d593797d"><td id="b[XD" class="" style="width:349px">Upper middle income</td><td id="[^]G" class="" style="width:349px">$4,466 and $13,845</td></tr></div><div style="display:contents" dir="ltr"><tr id="122e81fa-613a-44ec-8632-0d12a9d82254"><td id="b[XD" class="block-color-blue_background" style="width:349px">High income</td><td id="[^]G" class="block-color-blue_background" style="width:349px">$13,846 or more</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><p id="0909bd23-9735-48fb-b4d1-d7fc01f47fea" class="block-color-red">Note: The above-mentioned classification is subject to change. You can check the updated classification on World Bank’s website - <a href="https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups">https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups</a> </p></div><div style="display:contents" dir="auto"><h3 id="73442159-d96d-4d18-a882-c1c35af8b10c" class="">6.2.2 Development-based Classification</h3></div><div style="display:contents" dir="auto"><ul id="8271c9b4-5293-453d-9293-2561911b3350" class="bulleted-list"><li style="list-style-type:disc"><strong>Developed country </strong>- An industrialized country (or post-industrial country), more developed country or More Economically Developed Country (MEDC) is a sovereign state that has a developed economy and advanced technological infrastructure relative to other less industrialized nations. Example - USA</li></ul></div><div style="display:contents" dir="auto"><ul id="8f141699-895a-4d95-9cb3-77f5f98fe95d" class="bulleted-list"><li style="list-style-type:disc"><strong>Developing country </strong>- A relatively less industrialized nation which is based on primary activities but is thriving for new industrial development such as services (India) or mass production. Example - China and India</li></ul></div><div style="display:contents" dir="auto"><ul id="cf9c32b6-e2de-4407-a89b-01d899802976" class="bulleted-list"><li style="list-style-type:disc"><strong>Least Developed Countries </strong>- Least Developed Countries (LDCs) are low-income countries confronting severe structural impediments to sustainable development. They are highly vulnerable to economic and environmental shocks and have low levels of human assets. Examples - Somalia, Sudan, etc.</li></ul></div><div style="display:contents" dir="auto"><h2 id="03fc3680-6ba2-4edf-90b3-460083809123" class=""><mark class="highlight-teal">6.3 Common Characteristics of Developing Countries</mark></h2></div><div style="display:contents" dir="auto"><ol type="1" id="9cf06f13-3579-4a21-b0db-884a4a9f5319" class="numbered-list" start="1"><li>Low GNP Per Capita</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="4d24a08a-1d01-4d18-bd20-0e09cf417a98" class="numbered-list" start="2"><li>Scarcity of Capital</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="bca3879f-17b4-4638-8830-9d6f8dd4a4da" class="numbered-list" start="3"><li>Rapid population growth and high dependency burden</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="bd05c262-99fa-4300-9fbf-444a2ac79ad9" class="numbered-list" start="4"><li>Low Levels of Productivity</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="e713e68e-8e28-40f9-95da-248c2254c885" class="numbered-list" start="5"><li>Technological Backwardness</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="c418c659-4d88-47a4-a485-ed049dc435d1" class="numbered-list" start="6"><li>High Levels of Unemployment</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="7d85dfc1-26b5-4834-8635-33f0e08b33d8" class="numbered-list" start="7"><li>Low Human Wellbeing</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="8cda5090-e6eb-4c25-82c2-9b62ee366f9e" class="numbered-list" start="8"><li>Wide Income Inequality</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="47fb0cbe-754a-454b-a08d-58ac722c005e" class="numbered-list" start="9"><li>High Poverty</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="ba10f5d2-897c-44c9-9d51-c001d1cf38f1" class="numbered-list" start="10"><li>Agrarian Economy</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="08d83942-3fd5-4555-b307-722aff415090" class="numbered-list" start="11"><li>Low Participation in Foreign Trade</li></ol></div><div style="display:contents" dir="auto"><h1 id="6eebd0c7-55f4-4a4f-a16b-8daba17f5062" class="block-color-blue"><mark class="highlight-blue">7.0 Composite Development Index</mark></h1></div><div style="display:contents" dir="auto"><ul id="10a19335-34d2-4c0e-8a0b-c300734083b2" class="bulleted-list"><li style="list-style-type:disc">The <strong><mark class="highlight-orange_background">Raghuram Rajan Committee </mark></strong>submitted its report on a new <mark class="highlight-orange_background"><strong>Underdevelopment Index </strong></mark>called <mark class="highlight-orange_background"><strong>Composite Development Index </strong></mark>in <strong><mark class="highlight-orange_background">2013</mark></strong>.</li></ul></div><div style="display:contents" dir="auto"><ul id="715042ec-fbaf-48c0-a864-57d954723127" class="bulleted-list"><li style="list-style-type:disc">The committee suggested this index to determine underdevelopment of states.</li></ul></div><div style="display:contents" dir="auto"><ul id="d4264967-9ae8-4abe-8eff-9f90431f0e66" class="bulleted-list"><li style="list-style-type:disc">The index had <strong>10 sub-component </strong>carrying equal weightage -</li></ul></div><div style="display:contents" dir="ltr"><figure id="78ed8fc0-7d76-4277-a510-6c18ef023a81" class="image"><a href="Untitled%2012.png"><img style="width:443.994140625px" src="Untitled%2012.png"/></a></figure></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
