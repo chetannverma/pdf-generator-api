@@ -88,12 +88,24 @@ class _PageDecor:
     def __init__(self, img_dir: Path):
         # Header logo
         hdata = _load_file(img_dir, HEADER_LOGO_FILE)
-        self._hlogo = None
-        if hdata:
-            try:
-                self._hlogo = pdfcanvas.ImageReader(io.BytesIO(hdata))
-            except Exception as e:
-                print(f"[WARN] Header logo: {e}", file=sys.stderr)
+self._hlogo = None
+if hdata:
+    try:
+        from PIL import Image as PILImage
+        logo_img = PILImage.open(io.BytesIO(hdata)).convert("RGBA")
+        # Make black/near-black pixels transparent
+        pixels = logo_img.load()
+        for y in range(logo_img.height):
+            for x in range(logo_img.width):
+                r, g, b, a = pixels[x, y]
+                if r < 40 and g < 40 and b < 40:   # black threshold
+                    pixels[x, y] = (r, g, b, 0)    # make transparent
+        buf = io.BytesIO()
+        logo_img.save(buf, format="PNG")
+        buf.seek(0)
+        self._hlogo = pdfcanvas.ImageReader(buf)
+    except Exception as e:
+        print(f"[WARN] Header logo: {e}", file=sys.stderr)
 
         # Watermark — pre-processed once
         wmdata = _load_file(img_dir, WATERMARK_LOGO_FILE)
@@ -130,13 +142,13 @@ class _PageDecor:
         # Logo top-left
         if self._hlogo:
             try:
-                logo_h = HEADER_H * 0.70
-                logo_w = logo_h * 4.2
+                logo_h = HEADER_H * 0.82
+                logo_w = logo_h * 4.8
                 cv.drawImage(self._hlogo,
                              MARGIN_H,
                              h - HEADER_H + (HEADER_H - logo_h) / 2,
                              width=logo_w, height=logo_h,
-                             preserveAspectRatio=True, mask="auto")
+                             preserveAspectRatio=True, mask=None)
             except Exception as e:
                 print(f"[WARN] Logo draw: {e}", file=sys.stderr)
 
