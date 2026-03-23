@@ -1,127 +1,140 @@
 """
-generate_pdf.py  — FINAL VERSION
-─────────────────────────────────
-Converts Economic Growth & Development notes into a branded A4 PDF.
-
-Brand colours : Blue #1B71AC  |  Green #2AB573
-Header logo   : LOGO-FULL-01.png  (top-left of every page)
-Watermark     : LOGO-CROP.png     (550x550 px resized, 20% opacity, centred every page)
-
-All images are loaded from the SAME folder as this script (or --img-dir).
-No internet required — logos are bundled with the repo.
-
-Usage:
-    python generate_pdf.py [--output myfile.pdf] [--img-dir /path/to/images]
+generate_pdf.py  — FINAL v2 (matches Design Reference exactly)
+──────────────────────────────────────────────────────────────
+Reference design:
+  • Header  : white box top-left with logo | right = Subject | Chapter | Date
+  • Layout  : TWO-COLUMN newspaper style
+  • Section : Full-width green bar "ECONOMIC GROWTH AND DEVELOPMENT"
+  • Items   : Bold blue numbered heading, body text, bullet points
+  • Nuggets : Bordered box with pencil icon header
+  • Footer  : phone left | website centre | page-number green box right
+  • Watermark: LOGO-CROP.png centred, 20% opacity, 550×550 px
+  • Font    : Helvetica throughout (matches reference)
 """
 
 import io
 import os
 import sys
 import argparse
+import numpy as np
 from datetime import date
 from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.units import cm, mm
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    HRFlowable, Image
+    BaseDocTemplate, PageTemplate, Frame,
+    Paragraph, Spacer, Table, TableStyle,
+    HRFlowable, Image, KeepTogether, PageBreak,
+    NextPageTemplate
 )
+from reportlab.platypus.flowables import Flowable
 from reportlab.pdfgen import canvas as pdfcanvas
+from reportlab.lib.utils import ImageReader
 
-# ── Brand constants ───────────────────────────────────────────────────────────
+# ── Brand ─────────────────────────────────────────────────────────────────────
 BLUE        = colors.HexColor("#1B71AC")
 GREEN       = colors.HexColor("#2AB573")
-LIGHT_BLUE  = colors.HexColor("#E8F4FD")
-LIGHT_GREEN = colors.HexColor("#E8F9F1")
+LIGHT_GREEN = colors.HexColor("#E8F5EE")
+LIGHT_BLUE  = colors.HexColor("#EAF4FB")
 WHITE       = colors.white
-DARK_TEXT   = colors.HexColor("#1A1A2E")
-GREY_TEXT   = colors.HexColor("#555555")
-PAGE_BG     = colors.HexColor("#F9FAFB")
+DARK        = colors.HexColor("#1A1A2E")
+GREY        = colors.HexColor("#555555")
+LIGHT_GREY  = colors.HexColor("#F2F2F2")
+PAGE_BG     = colors.HexColor("#FFFFFF")
 
 HEADER_LOGO_FILE    = "LOGO-FULL-01.png"
 WATERMARK_LOGO_FILE = "LOGO-CROP.png"
 
-SUBJECT  = "Economic and Social Issues"
-CHAPTER  = "Economic Growth and Development"
-PHONE    = "+91 9999466225"
-WEBSITE  = "www.anujjindal.in"
+SUBJECT = "Economic and Social Issues"
+CHAPTER = "Economic Growth and Development"
+PHONE   = "+91 9999466225"
+WEBSITE = "www.anujjindal.in"
 
-PAGE_W, PAGE_H = A4
-MARGIN_H = 1.5 * cm
-MARGIN_V = 1.5 * cm
-HEADER_H = 1.9 * cm
+PAGE_W, PAGE_H = A4   # 595 × 842 pt
+MARGIN_TOP    = 2.8 * cm   # space for header
+MARGIN_BOTTOM = 1.6 * cm   # space for footer
+MARGIN_SIDE   = 1.2 * cm
+COL_GAP       = 0.4 * cm
+COL_W         = (PAGE_W - 2 * MARGIN_SIDE - COL_GAP) / 2   # ~8.6 cm each
+
+HEADER_H = 1.8 * cm
+FOOTER_H = 0.85 * cm
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Logo pre-processor ─────────────────────────────────────────────────────────
+def _process_header_logo(data: bytes) -> ImageReader | None:
+    """
+    LOGO-FULL-01.png has a BLACK background with BLUE text (#1B71AC).
+    The header uses a WHITE background, so we need the logo as-is with
+    black background removed (made transparent).
+    Green mark → keep. Blue text → keep as blue (shows on white bg).
+    Black bg → transparent.
+    """
+    try:
+        from PIL import Image as PILImage
+        img = PILImage.open(io.BytesIO(data)).convert("RGBA")
+        arr = np.array(img, dtype=np.float32)
+        R, G, B, A = arr[:,:,0], arr[:,:,1], arr[:,:,2], arr[:,:,3]
+
+        out = arr.copy()
+        # Black/near-black pixels → transparent
+        is_black = (R < 50) & (G < 50) & (B < 50)
+        out[is_black, 3] = 0  # alpha = 0 → transparent
+
+        result = PILImage.fromarray(out.astype(np.uint8), "RGBA")
+        buf = io.BytesIO()
+        result.save(buf, format="PNG")
+        buf.seek(0)
+        return ImageReader(buf)
+    except Exception as e:
+        print(f"[WARN] Header logo processing error: {e}", file=sys.stderr)
+        return None
+
+
+def _process_watermark(data: bytes) -> ImageReader | None:
+    """Resize to 550×550 px and apply 20% opacity."""
+    try:
+        from PIL import Image as PILImage
+        img = PILImage.open(io.BytesIO(data)).convert("RGBA")
+        img = img.resize((550, 550), PILImage.LANCZOS)
+        r, g, b, a = img.split()
+        a = a.point(lambda x: int(x * 0.20))
+        img.putalpha(a)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        return ImageReader(buf)
+    except Exception as e:
+        print(f"[WARN] Watermark processing error: {e}", file=sys.stderr)
+        return None
+
+
 def _load_file(img_dir: Path, filename: str) -> bytes | None:
     p = img_dir / filename
     if p.exists():
         return p.read_bytes()
-    print(f"[WARN] File not found: {p}", file=sys.stderr)
+    print(f"[WARN] Not found: {p}", file=sys.stderr)
     return None
 
 
-def _watermark_reader(data: bytes):
-    """Resize to exactly 550x550 px and apply 20% opacity. Returns ImageReader."""
-    try:
-        from PIL import Image as PILImage
-        wm = PILImage.open(io.BytesIO(data)).convert("RGBA")
-        wm = wm.resize((550, 550), PILImage.LANCZOS)
-        r, g, b, a = wm.split()
-        a = a.point(lambda x: int(x * 0.20))
-        wm.putalpha(a)
-        buf = io.BytesIO()
-        wm.save(buf, format="PNG")
-        buf.seek(0)
-        return pdfcanvas.ImageReader(buf)
-    except Exception as e:
-        print(f"[WARN] Watermark error: {e}", file=sys.stderr)
-        return None
-
-
-# ── Page decorator ────────────────────────────────────────────────────────────
-class _PageDecor:
+# ── Page canvas (header / footer / watermark) ─────────────────────────────────
+class _PageCanvas:
     def __init__(self, img_dir: Path):
-        # Header logo
         hdata = _load_file(img_dir, HEADER_LOGO_FILE)
-self._hlogo = None
-if hdata:
-    try:
-        from PIL import Image as PILImage
-        logo_img = PILImage.open(io.BytesIO(hdata)).convert("RGBA")
-        # Make black/near-black pixels transparent
-        pixels = logo_img.load()
-        for y in range(logo_img.height):
-            for x in range(logo_img.width):
-                r, g, b, a = pixels[x, y]
-                if r < 40 and g < 40 and b < 40:   # black threshold
-                    pixels[x, y] = (r, g, b, 0)    # make transparent
-        buf = io.BytesIO()
-        logo_img.save(buf, format="PNG")
-        buf.seek(0)
-        self._hlogo = pdfcanvas.ImageReader(buf)
-    except Exception as e:
-        print(f"[WARN] Header logo: {e}", file=sys.stderr)
-
-        # Watermark — pre-processed once
+        self._logo   = _process_header_logo(hdata) if hdata else None
         wmdata = _load_file(img_dir, WATERMARK_LOGO_FILE)
-        self._wm = _watermark_reader(wmdata) if wmdata else None
+        self._wm     = _process_watermark(wmdata) if wmdata else None
+        self._date   = date.today().strftime("%d %B %Y")
 
-        self._date = date.today().strftime("%d %B %Y")
-
-    def __call__(self, cv: pdfcanvas.Canvas, doc):
+    def draw(self, cv: pdfcanvas.Canvas, doc):
         cv.saveState()
         w, h = PAGE_W, PAGE_H
 
-        # Background
-        cv.setFillColor(PAGE_BG)
-        cv.rect(0, 0, w, h, fill=1, stroke=0)
-
-        # Watermark (behind everything)
+        # ── Watermark behind everything ───────────────────────────────────────
         if self._wm:
             try:
                 wm_pt = 8 * cm
@@ -132,433 +145,564 @@ if hdata:
             except Exception as e:
                 print(f"[WARN] WM draw: {e}", file=sys.stderr)
 
-        # Header bar
-        cv.setFillColor(BLUE)
+        # ── Header ────────────────────────────────────────────────────────────
+        # White background bar
+        cv.setFillColor(WHITE)
         cv.rect(0, h - HEADER_H, w, HEADER_H, fill=1, stroke=0)
-        # Green accent line
-        cv.setFillColor(GREEN)
-        cv.rect(0, h - HEADER_H - 3, w, 3, fill=1, stroke=0)
 
-        # Logo top-left
-        if self._hlogo:
+        # Bottom border line of header (thin blue)
+        cv.setStrokeColor(BLUE)
+        cv.setLineWidth(1.5)
+        cv.line(0, h - HEADER_H, w, h - HEADER_H)
+
+        # Logo box — white rounded rect top-left
+        logo_box_w = 5.2 * cm
+        logo_box_h = HEADER_H - 4
+        logo_box_x = MARGIN_SIDE
+        logo_box_y = h - HEADER_H + 2
+
+        # Draw logo inside the box
+        if self._logo:
             try:
-                logo_h = HEADER_H * 0.82
-                logo_w = logo_h * 4.8
-                cv.drawImage(self._hlogo,
-                             MARGIN_H,
-                             h - HEADER_H + (HEADER_H - logo_h) / 2,
+                logo_h = logo_box_h * 0.78
+                logo_w = logo_h * 3.8
+                lx = logo_box_x + (logo_box_w - logo_w) / 2
+                ly = logo_box_y + (logo_box_h - logo_h) / 2
+                cv.drawImage(self._logo, lx, ly,
                              width=logo_w, height=logo_h,
-                             preserveAspectRatio=True, mask=None)
+                             preserveAspectRatio=True, mask="auto")
             except Exception as e:
                 print(f"[WARN] Logo draw: {e}", file=sys.stderr)
 
-        # Right-side text: subject / chapter / date
-        from reportlab.platypus import Paragraph as P
-        st = _build_styles()
-        p = P(f"<b>{SUBJECT}</b><br/>{CHAPTER}<br/>{self._date}",
-              st["header_subject"])
-        p.wrapOn(cv, 10 * cm, HEADER_H)
-        p.drawOn(cv, w - MARGIN_H - 10 * cm,
-                 h - HEADER_H + (HEADER_H - p.height) / 2)
+        # Right side: Subject | Chapter | Date
+        cv.setFont("Helvetica", 7.5)
+        cv.setFillColor(GREY)
+        right_text = f"{SUBJECT}  |  {CHAPTER}  |  {self._date}"
+        cv.drawRightString(w - MARGIN_SIDE,
+                           h - HEADER_H/2 - 3, right_text)
 
-        # Footer bar
-        fh = 0.9 * cm
-        cv.setFillColor(BLUE)
-        cv.rect(0, 0, w, fh, fill=1, stroke=0)
-        cv.setFillColor(GREEN)
-        cv.rect(0, fh, w, 2, fill=1, stroke=0)
+        # ── Footer ────────────────────────────────────────────────────────────
+        # Light grey background
+        cv.setFillColor(LIGHT_GREY)
+        cv.rect(0, 0, w, FOOTER_H, fill=1, stroke=0)
 
-        # Footer text: phone LEFT | website CENTRE | page RIGHT
+        # Top border line of footer
+        cv.setStrokeColor(colors.HexColor("#CCCCCC"))
+        cv.setLineWidth(0.5)
+        cv.line(0, FOOTER_H, w, FOOTER_H)
+
+        # Phone left
         cv.setFont("Helvetica", 8)
+        cv.setFillColor(GREY)
+        cv.drawString(MARGIN_SIDE, FOOTER_H / 2 - 3, PHONE)
+
+        # Website centre
+        cv.drawCentredString(w / 2, FOOTER_H / 2 - 3, WEBSITE)
+
+        # Page number — green box on right (matches reference exactly)
+        pg_box_w = 1.2 * cm
+        pg_box_h = FOOTER_H
+        cv.setFillColor(GREEN)
+        cv.rect(w - pg_box_w, 0, pg_box_w, pg_box_h, fill=1, stroke=0)
+        cv.setFont("Helvetica-Bold", 9)
         cv.setFillColor(WHITE)
-        ty = fh / 2 - 3
-        cv.drawString(MARGIN_H, ty, PHONE)
-        cv.drawCentredString(w / 2, ty, WEBSITE)
-        cv.drawRightString(w - MARGIN_H, ty, f"Page {doc.page}")
+        cv.drawCentredString(w - pg_box_w / 2, FOOTER_H / 2 - 3,
+                             str(doc.page))
 
         cv.restoreState()
 
 
 # ── Styles ────────────────────────────────────────────────────────────────────
-def _build_styles() -> dict:
+def _styles() -> dict:
     def s(name, **kw):
         return ParagraphStyle(name=name, **kw)
+
     return {
-        "body":    s("body", fontName="Helvetica", fontSize=9.5, leading=15,
-                     textColor=DARK_TEXT, spaceAfter=4, alignment=TA_JUSTIFY),
-        "body_bullet": s("body_bullet", fontName="Helvetica", fontSize=9.5,
-                         leading=15, textColor=DARK_TEXT,
-                         leftIndent=14, firstLineIndent=-10, spaceAfter=3),
-        "h2":      s("h2", fontName="Helvetica-Bold", fontSize=12.5, leading=16,
-                     textColor=WHITE, spaceAfter=3),
-        "h3":      s("h3", fontName="Helvetica-Bold", fontSize=10.5, leading=14,
-                     textColor=BLUE, spaceAfter=3, spaceBefore=5),
-        "nugget_title": s("nugget_title", fontName="Helvetica-Bold", fontSize=10,
-                          leading=14, textColor=GREEN, spaceAfter=2),
-        "nugget_body":  s("nugget_body", fontName="Helvetica", fontSize=9,
-                          leading=13, textColor=DARK_TEXT,
-                          leftIndent=10, firstLineIndent=-8, spaceAfter=2),
-        "cell":    s("cell", fontName="Helvetica", fontSize=9, leading=13,
-                     textColor=DARK_TEXT),
-        "cell_hdr":s("cell_hdr", fontName="Helvetica-Bold", fontSize=9.5,
-                     leading=13, textColor=WHITE, alignment=TA_CENTER),
-        "header_subject": s("header_subject", fontName="Helvetica-Bold",
-                            fontSize=7.5, leading=11,
-                            textColor=WHITE, alignment=TA_RIGHT),
+        # Section heading bar text
+        "section_bar": s("section_bar",
+            fontName="Helvetica-Bold", fontSize=10, leading=14,
+            textColor=WHITE, spaceAfter=0),
+
+        # Numbered item title (bold blue)
+        "item_title": s("item_title",
+            fontName="Helvetica-Bold", fontSize=9, leading=13,
+            textColor=BLUE, spaceAfter=2, spaceBefore=6),
+
+        # Sub-heading under item
+        "sub_head": s("sub_head",
+            fontName="Helvetica-Bold", fontSize=8.5, leading=12,
+            textColor=DARK, spaceAfter=1, spaceBefore=3),
+
+        # Body text
+        "body": s("body",
+            fontName="Helvetica", fontSize=8.5, leading=12.5,
+            textColor=DARK, spaceAfter=2, alignment=TA_LEFT),
+
+        # Bullet point
+        "bullet": s("bullet",
+            fontName="Helvetica", fontSize=8.5, leading=12.5,
+            textColor=DARK, leftIndent=10, firstLineIndent=-8,
+            spaceAfter=1.5),
+
+        # Source line
+        "source": s("source",
+            fontName="Helvetica-Oblique", fontSize=7.5, leading=11,
+            textColor=GREY, spaceAfter=4, spaceBefore=2),
+
+        # Knowledge nugget title
+        "nugget_head": s("nugget_head",
+            fontName="Helvetica-Bold", fontSize=8.5, leading=12,
+            textColor=DARK, spaceAfter=1),
+
+        # Knowledge nugget body
+        "nugget_body": s("nugget_body",
+            fontName="Helvetica", fontSize=8, leading=12,
+            textColor=DARK, leftIndent=10, firstLineIndent=-8,
+            spaceAfter=1.5),
+
+        # About sub-section inside nugget
+        "nugget_sub": s("nugget_sub",
+            fontName="Helvetica", fontSize=8, leading=11,
+            textColor=DARK, spaceAfter=1),
     }
 
 
-# ── Layout helpers ────────────────────────────────────────────────────────────
-def _bar(title, styles):
-    tbl = Table([[Paragraph(title, styles["h2"])]],
-                colWidths=[PAGE_W - 2 * MARGIN_H],
-                style=TableStyle([
-                    ("BACKGROUND",    (0,0),(-1,-1), BLUE),
-                    ("TOPPADDING",    (0,0),(-1,-1), 6),
-                    ("BOTTOMPADDING", (0,0),(-1,-1), 6),
-                    ("LEFTPADDING",   (0,0),(-1,-1), 10),
-                    ("RIGHTPADDING",  (0,0),(-1,-1), 10),
-                ]))
-    return [Spacer(1, 8), tbl, Spacer(1, 6)]
+# ── Flowable helpers ──────────────────────────────────────────────────────────
+def _section_bar(title: str, st: dict) -> list:
+    """Full-width green section header bar — matches reference."""
+    tbl = Table(
+        [[Paragraph(title.upper(), st["section_bar"])]],
+        colWidths=[COL_W],
+        style=TableStyle([
+            ("BACKGROUND",    (0,0),(-1,-1), GREEN),
+            ("TOPPADDING",    (0,0),(-1,-1), 5),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+            ("LEFTPADDING",   (0,0),(-1,-1), 8),
+            ("RIGHTPADDING",  (0,0),(-1,-1), 8),
+        ])
+    )
+    return [Spacer(1, 4), tbl, Spacer(1, 3)]
 
 
-def _sub(title, styles):
-    return [Paragraph(title, styles["h3"]), Spacer(1, 2)]
+def _item_heading(num: str, title: str, st: dict) -> Paragraph:
+    return Paragraph(f"<b>{num}. {title}</b>", st["item_title"])
 
 
-def _b(text, styles):
-    return Paragraph(f"•  {text}", styles["body_bullet"])
+def _sub(title: str, st: dict) -> Paragraph:
+    return Paragraph(f"<b>{title}</b>", st["sub_head"])
 
 
-def _nugget(title, items, styles):
-    content = [Paragraph(f"📌  {title}", styles["nugget_title"])]
+def _body(text: str, st: dict) -> Paragraph:
+    return Paragraph(text, st["body"])
+
+
+def _bullet(text: str, st: dict) -> Paragraph:
+    return Paragraph(f"• {text}", st["bullet"])
+
+
+def _source(text: str, st: dict) -> Paragraph:
+    return Paragraph(f"<i>Source: {text}</i>", st["source"])
+
+
+def _nugget(heading: str, sub_title: str, items: list, st: dict) -> list:
+    """
+    Knowledge Nuggets box — matches reference exactly:
+    Green top border, pencil icon + 'Knowledge Nuggets' header,
+    bold sub-title, bullet points.
+    """
+    content = []
+    # Header row: pencil icon text + "Knowledge Nuggets"
+    content.append(
+        Paragraph(f'✏  <font color="#2AB573"><b>Knowledge Nuggets</b></font>',
+                  st["nugget_head"])
+    )
+    content.append(Paragraph(f"<b>{sub_title}</b>", st["sub_head"]))
     for item in items:
-        content.append(Paragraph(f"•  {item}", styles["nugget_body"]))
-    inner = Table([[c] for c in content],
-                  colWidths=[PAGE_W - 2 * MARGIN_H - 24],
-                  style=TableStyle([("TOPPADDING",(0,0),(-1,-1),2),
-                                    ("BOTTOMPADDING",(0,0),(-1,-1),2),
-                                    ("LEFTPADDING",(0,0),(-1,-1),4),
-                                    ("RIGHTPADDING",(0,0),(-1,-1),4)]))
-    outer = Table([[inner]], colWidths=[PAGE_W - 2 * MARGIN_H],
-                  style=TableStyle([
-                      ("BACKGROUND",(0,0),(-1,-1), LIGHT_GREEN),
-                      ("BOX",(0,0),(-1,-1), 1.5, GREEN),
-                      ("LEFTPADDING",(0,0),(-1,-1),10),
-                      ("RIGHTPADDING",(0,0),(-1,-1),10),
-                      ("TOPPADDING",(0,0),(-1,-1),8),
-                      ("BOTTOMPADDING",(0,0),(-1,-1),8),
-                  ]))
-    return [Spacer(1, 6), outer, Spacer(1, 6)]
+        content.append(Paragraph(f"• {item}", st["nugget_body"]))
+
+    inner = Table(
+        [[c] for c in content],
+        colWidths=[COL_W - 16],
+        style=TableStyle([
+            ("TOPPADDING",    (0,0),(-1,-1), 1.5),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 1.5),
+            ("LEFTPADDING",   (0,0),(-1,-1), 0),
+            ("RIGHTPADDING",  (0,0),(-1,-1), 0),
+        ])
+    )
+    outer = Table(
+        [[inner]],
+        colWidths=[COL_W],
+        style=TableStyle([
+            ("BOX",           (0,0),(-1,-1), 1,   colors.HexColor("#BBBBBB")),
+            ("LINEABOVE",     (0,0),(-1, 0), 3,   GREEN),
+            ("BACKGROUND",    (0,0),(-1,-1), LIGHT_GREEN),
+            ("TOPPADDING",    (0,0),(-1,-1), 6),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 6),
+            ("LEFTPADDING",   (0,0),(-1,-1), 8),
+            ("RIGHTPADDING",  (0,0),(-1,-1), 8),
+        ])
+    )
+    return [Spacer(1, 4), outer, Spacer(1, 4)]
 
 
-def _tbl(headers, rows, styles):
-    cw = (PAGE_W - 2 * MARGIN_H) / len(headers)
-    data = [[Paragraph(h, styles["cell_hdr"]) for h in headers]]
-    for row in rows:
-        data.append([Paragraph(c, styles["cell"]) for c in row])
-    t = Table(data, colWidths=[cw]*len(headers), repeatRows=1)
-    t.setStyle(TableStyle([
-        ("BACKGROUND",(0,0),(-1,0), BLUE),
-        ("ROWBACKGROUNDS",(0,1),(-1,-1),[WHITE, LIGHT_BLUE]),
-        ("BOX",(0,0),(-1,-1),0.8, BLUE),
-        ("INNERGRID",(0,0),(-1,-1),0.4, colors.HexColor("#C5DCF0")),
-        ("TOPPADDING",(0,0),(-1,-1),5),
-        ("BOTTOMPADDING",(0,0),(-1,-1),5),
-        ("LEFTPADDING",(0,0),(-1,-1),6),
-        ("RIGHTPADDING",(0,0),(-1,-1),6),
-        ("VALIGN",(0,0),(-1,-1),"MIDDLE"),
-    ]))
-    return [Spacer(1,6), t, Spacer(1,8)]
+def _divider() -> HRFlowable:
+    return HRFlowable(width="100%", thickness=0.4,
+                      color=colors.HexColor("#DDDDDD"), spaceAfter=3)
 
 
-def _img(img_dir, fname, h=5.5):
+def _img(img_dir: Path, fname: str, h: float = 4.5) -> list:
     p = img_dir / fname
     if p.exists():
-        return [Image(str(p), width=PAGE_W-2*MARGIN_H-10,
-                      height=h*cm, kind="proportional"), Spacer(1,6)]
+        return [Image(str(p), width=COL_W, height=h*cm,
+                      kind="proportional"), Spacer(1, 4)]
     return []
 
 
-# ── Story ─────────────────────────────────────────────────────────────────────
-def _build_story(styles, img_dir):
+# ── Content ───────────────────────────────────────────────────────────────────
+def _build_content(st: dict, img_dir: Path) -> list:
     s = []
-    add = s.append
-    ext = s.extend
+    add  = s.append
+    ext  = s.extend
 
-    # 1.0 Economic Growth
-    ext(_bar("1.0  Economic Growth", styles))
-    ext(_sub("1.1  Meaning and Importance", styles))
-    add(Paragraph("Economic growth is a sustained increase in the output of goods and "
-                  "services over a long period, measured in terms of value added.", styles["body"]))
-    add(Paragraph("<b>Economic growth rate</b> = (Change in GDP) ÷ (Last Year's GDP) × 100",
-                  styles["body"]))
+    # ═══════════════════════════════════════════════════════════
+    # SECTION BAR
+    # ═══════════════════════════════════════════════════════════
+    ext(_section_bar("Economic Growth and Development", st))
+
+    # ───────────────────────────────────────────────────────────
+    # 1. ECONOMIC GROWTH
+    # ───────────────────────────────────────────────────────────
+    add(_item_heading("1", "Economic Growth — Meaning and Importance", st))
+    add(_body(
+        "It is an increase in the level of output of goods and services that "
+        "is sustained over a long period of time, measured in terms of value added.", st))
+    add(_body(
+        "<b>Economic growth rate</b> = (Change in GDP) / (Last Year's GDP) × 100", st))
+
     for pt in [
-        "Refers to growth of <b>potential output</b> — production at full employment.",
-        "A <b>dynamic concept</b> — a continuous expansion in the level of output.",
+        "Refers to growth of <b>potential output</b> i.e. production at full employment.",
+        "A <b>dynamic concept</b> — continuous expansion in level of output.",
         "<b>Commodity Market:</b> leads to increased output and newer, better products.",
         "<b>Factor Market:</b> improves workforce skills and produces more efficient machinery.",
-        "<b>Structural Shift:</b> moves an economy from rural/agricultural to urban/industrial.",
+        "<b>Structural Shift:</b> moves economy from rural/agricultural to urban/industrial.",
     ]:
-        add(_b(pt, styles))
-    ext(_img(img_dir, "Untitled.png", 7))
+        add(_bullet(pt, st))
 
-    ext(_sub("1.2  Importance of Economic Growth", styles))
+    ext(_img(img_dir, "Untitled.png", 5))
+
+    add(_sub("1.2  Importance of Economic Growth", st))
     for pt in ["Poverty alleviation",
                "Wider availability for human choices and economic activities",
-               "Resolves social issues", "Improves standard of living", "Better technology"]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+               "Resolves social issues", "Improves standard of living",
+               "Better technology"]:
+        add(_bullet(pt, st))
 
-    ext(_sub("1.3  Factors Affecting Economic Growth", styles))
+    add(_sub("1.3  Factors Affecting Economic Growth", st))
     for title, desc in [
-        ("<b>Capital Formation</b>", "More investment → more production → higher growth."),
-        ("<b>Capital-Output Ratio</b>",
-         "Units of capital per unit of output. A lower ratio means higher efficiency, "
-         "potentially freeing capital for further investment and innovation."),
-        ("<b>Occupational Structure</b>",
+        ("Capital Formation (Investment)",
+         "More capital investment → more production → higher growth."),
+        ("Capital-Output Ratio",
+         "Units of capital per unit of output. Lower ratio = higher efficiency."),
+        ("Occupational Structure",
          "Efficient labour utilisation boosts overall productivity."),
-        ("<b>Technological Progress</b>",
-         "Enables more output from the same resources, boosting potential output."),
+        ("Technological Progress",
+         "Enables more output from the same resources."),
     ]:
-        add(Paragraph(f"{title} — {desc}", styles["body"]))
-    add(Spacer(1,4))
+        add(_bullet(f"<b>{title}</b> — {desc}", st))
 
-    ext(_sub("1.4  Limitations of Economic Growth", styles))
+    add(_sub("1.4  Limitations of Economic Growth", st))
     for pt in [
-        "<b>Inequality of Income</b> — early-stage growth can worsen income distribution.",
+        "<b>Inequality of Income</b> — early-stage growth worsens income distribution.",
         "<b>Pollution &amp; Negative Externalities</b> — increased output pressures the environment.",
         "<b>Loss of Non-Renewable Resources</b> — more production depletes finite resources.",
     ]:
-        add(_b(pt, styles))
+        add(_bullet(pt, st))
 
-    # 2.0 Economic Development
-    ext(_bar("2.0  Economic Development", styles))
-    ext(_sub("2.1  Meaning and Importance", styles))
-    add(Paragraph(
-        "A sustained, long-term increase in economic well-being and overall prosperity. "
-        "A <b>broader concept</b> that includes economic growth — without growth, "
-        "development cannot happen. Encompasses improvements beyond GDP: quality of life, "
-        "poverty and inequality reduction, technology, infrastructure, education, and healthcare.",
-        styles["body"]))
-    ext(_nugget("Importance of Economic Development", [
-        "Improved Quality of Life", "Poverty Reduction", "Enhanced Human Capital",
-        "Increased Employment", "Stimulated Innovation and Technological Advancement",
-        "Infrastructure Development", "Social Stability and Equity",
-        "Environmental Sustainability", "Institutional and Political Stability",
-    ], styles))
+    add(Spacer(1, 4))
+    add(_divider())
 
-    ext(_sub("2.2  Evolution of Economic Development", styles))
-    add(Paragraph(
-        "Till the 1960s used as a synonym of economic growth. Two approaches emerged:",
-        styles["body"]))
-    for pt in [
-        "<b>Traditional Approach</b> — focused on GDP growth of 5–7% p.a.; structural "
-        "transformation from agrarian to industrial; assumed trickle-down effect.",
-        "<b>Modern Approach</b> — broader, multidimensional development beyond GDP.",
-    ]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+    # ───────────────────────────────────────────────────────────
+    # 2. ECONOMIC DEVELOPMENT
+    # ───────────────────────────────────────────────────────────
+    add(_item_heading("2", "Economic Development — Meaning and Importance", st))
+    add(_body(
+        "A sustained, long-term increase in economic well-being, standard of living, and "
+        "overall prosperity. A <b>broader concept</b> that includes economic growth.", st))
+    add(_body(
+        "Encompasses improvements beyond GDP: quality of life, poverty and inequality "
+        "reduction, technology, infrastructure, education, and healthcare.", st))
 
-    ext(_sub("2.3  Traditional and Modern Approaches", styles))
-    ext(_img(img_dir, "Untitled_1.png", 6))
-    ext(_img(img_dir, "Untitled_2.png", 6))
+    add(_sub("Importance", st))
+    for pt in ["Improved Quality of Life", "Poverty Reduction", "Enhanced Human Capital",
+               "Increased Employment", "Stimulated Innovation",
+               "Infrastructure Development", "Social Stability and Equity",
+               "Environmental Sustainability", "Institutional and Political Stability"]:
+        add(_bullet(pt, st))
 
-    # 3.0 Growth vs Development
-    ext(_bar("3.0  Economic Growth vs Economic Development", styles))
-    ext(_tbl(
-        ["Basis", "Economic Growth", "Economic Development"],
-        [
-            ["Meaning", "Sustained increase in output.",
-             "Quantitative AND qualitative changes in the economy."],
-            ["Parameters", "Rise in GDP or market productivity.",
-             "Health, education, employment, gender, environment, etc."],
-            ["Nature", "Quantitative only.", "Both quantitative and qualitative."],
-            ["Scope", "Narrow.", "Broad."],
-            ["Measurement", "GDP, GNP, etc.", "HDI, GII, GDI, etc."],
-        ], styles))
+    add(_sub("2.2  Evolution of Economic Development", st))
+    add(_body("Till 1960s, used as a synonym of economic growth. Two approaches emerged:", st))
+    add(_bullet("<b>Traditional Approach</b> — focused on GDP growth of 5–7% p.a.; "
+                "structural shift from agrarian to industrial; trickle-down effect.", st))
+    add(_bullet("<b>Modern Approach</b> — broader, multidimensional beyond GDP growth.", st))
 
-    # 4.0 Structural Changes
-    ext(_bar("4.0  Economic Development and Structural Changes", styles))
-    add(Paragraph(
-        "Pioneering work by <b>Prof. Simon Kuznets</b> (historical data); "
-        "<b>Hollis Chenery</b> extended it using current data.", styles["body"]))
-    ext(_img(img_dir, "Untitled_3.png", 6))
-    ext(_img(img_dir, "Untitled_4.png", 6))
+    ext(_img(img_dir, "Untitled_1.png", 5))
+    ext(_img(img_dir, "Untitled_2.png", 5))
 
-    # 5.0 Indices
-    ext(_bar("5.0  Indices to Measure Economic Development", styles))
-    ext(_sub("5.1  Human Development Report & Its Components", styles))
-    ext(_img(img_dir, "Untitled_5.png", 6))
+    add(_divider())
 
-    ext(_sub("5.1.1  Human Development Index (HDI)", styles))
-    for k, v in [
-        ("Origin", "1990"),
-        ("Released by", "United Nations Development Programme (UNDP)"),
-        ("Purpose", "People and their capabilities — not economic growth alone — "
-                    "should be the ultimate criteria for assessing development."),
-        ("Coverage", "191 countries (subject to change)"),
-        ("Range", "0 (lowest) to 1 (highest human development)"),
-    ]:
-        add(Paragraph(f"<b>{k}:</b>  {v}", styles["body"]))
-    ext(_img(img_dir, "Untitled_6.png", 6))
+    # ───────────────────────────────────────────────────────────
+    # 3. GROWTH vs DEVELOPMENT
+    # ───────────────────────────────────────────────────────────
+    add(_item_heading("3", "Economic Growth vs Economic Development", st))
 
-    ext(_sub("5.1.2  Inequality-adjusted HDI (IHDI)", styles))
-    ext(_img(img_dir, "Untitled_7.png", 5))
-    for pt in [
-        "<b>Origin:</b> 2010  |  <b>Released by:</b> UNDP",
-        "Adds a <b>correction factor for inequality</b> within a country.",
-        "HDI measures averages; IHDI measures the <i>distribution</i> of achievements.",
-    ]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+    cw = COL_W / 3
+    tbl_data = [
+        [Paragraph("<b>Basis</b>",       ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE)),
+         Paragraph("<b>Growth</b>",      ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE)),
+         Paragraph("<b>Development</b>", ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE))],
+        [Paragraph("Meaning",     ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("Increase in output sustained over time.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("Quantitative AND qualitative changes.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5))],
+        [Paragraph("Nature",      ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("Quantitative only.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("Both quantitative and qualitative.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5))],
+        [Paragraph("Scope",       ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("Narrow.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("Broad.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5))],
+        [Paragraph("Measurement", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("GDP, GNP.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("HDI, GII, GDI.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5))],
+    ]
+    comp_tbl = Table(tbl_data, colWidths=[cw]*3,
+        style=TableStyle([
+            ("BACKGROUND",    (0,0),(-1,0), BLUE),
+            ("ROWBACKGROUNDS",(0,1),(-1,-1), [WHITE, LIGHT_BLUE]),
+            ("BOX",           (0,0),(-1,-1), 0.5, BLUE),
+            ("INNERGRID",     (0,0),(-1,-1), 0.3, colors.HexColor("#C5DCF0")),
+            ("TOPPADDING",    (0,0),(-1,-1), 3),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 3),
+            ("LEFTPADDING",   (0,0),(-1,-1), 4),
+            ("RIGHTPADDING",  (0,0),(-1,-1), 4),
+            ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
+        ]))
+    add(comp_tbl)
+    add(Spacer(1, 5))
+    add(_divider())
 
-    ext(_sub("5.1.3  Gender Development Index (GDI)", styles))
-    ext(_img(img_dir, "Screenshot_2023-12-11_153014.png", 5.5))
+    # ───────────────────────────────────────────────────────────
+    # 4. STRUCTURAL CHANGES
+    # ───────────────────────────────────────────────────────────
+    add(_item_heading("4", "Economic Development and Structural Changes", st))
+    add(_body(
+        "Pioneering work by <b>Prof. Simon Kuznets</b> (historical data). "
+        "<b>Hollis Chenery</b> extended it using current data.", st))
+    ext(_img(img_dir, "Untitled_3.png", 5))
+    ext(_img(img_dir, "Untitled_4.png", 5))
+    add(_divider())
+
+    # ───────────────────────────────────────────────────────────
+    # 5. INDICES
+    # ───────────────────────────────────────────────────────────
+    add(_item_heading("5", "Indices to Measure Economic Development", st))
+    ext(_img(img_dir, "Untitled_5.png", 5.5))
+
+    # 5.1 HDI
+    add(_sub("5.1.1  Human Development Index (HDI)", st))
     for k, v in [
         ("Origin", "1990  |  Released by: UNDP"),
-        ("Purpose", "Measure health, education, and standard of living separately for men and women."),
+        ("Purpose", "People and capabilities — not just economic growth."),
+        ("Coverage", "191 countries  |  Range: 0 to 1"),
     ]:
-        add(Paragraph(f"<b>{k}:</b>  {v}", styles["body"]))
-    add(Spacer(1,4))
+        add(_bullet(f"<b>{k}:</b>  {v}", st))
+    ext(_img(img_dir, "Untitled_6.png", 5.5))
 
-    ext(_sub("5.1.4  Gender Inequality Index (GII)", styles))
-    ext(_img(img_dir, "Untitled_8.png", 5.5))
+    # Nugget: HDI
+    ext(_nugget("HDI", "Components of HDI",
+        ["Long and healthy life — Life expectancy at birth",
+         "Knowledge — Expected & mean years of schooling",
+         "Standard of living — GNI per capita (PPP $)"], st))
+
+    # 5.1.2 IHDI
+    add(_sub("5.1.2  Inequality-adjusted HDI (IHDI)", st))
+    ext(_img(img_dir, "Untitled_7.png", 4.5))
     for pt in [
-        "<b>Origin:</b> 1990  |  <b>Released by:</b> UNDP",
-        "Reflects gender disadvantage across <b>reproductive health</b>, "
-        "<b>empowerment</b>, and <b>labour market</b>.",
-        "Ranges 0 (equality) to 1 (maximum inequality) — lower = better.",
+        "<b>Origin:</b> 2010  |  Released by: UNDP",
+        "Adds a <b>correction factor for inequality</b> within a country.",
+        "HDI = averages; IHDI = distribution of achievements.",
     ]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+        add(_bullet(pt, st))
 
-    ext(_sub("5.1.5  Gender Social Norms Index (GSNI)", styles))
-    ext(_img(img_dir, "Untitled_9.png", 5.5))
+    # 5.1.3 GDI
+    add(_sub("5.1.3  Gender Development Index (GDI)", st))
+    ext(_img(img_dir, "Screenshot_2023-12-11_153014.png", 4.5))
+    add(_bullet("<b>Origin:</b> 1990  |  Released by: UNDP", st))
+    add(_bullet(
+        "<b>Purpose:</b> Measure health, education, and standard of living "
+        "separately for men and women.", st))
+
+    # 5.1.4 GII
+    add(_sub("5.1.4  Gender Inequality Index (GII)", st))
+    ext(_img(img_dir, "Untitled_8.png", 4.5))
     for pt in [
-        "<b>Origin:</b> 2019  |  <b>Released by:</b> UNDP",
-        "Quantifies biases against women across four dimensions: political, "
-        "educational, economic, and physical integrity.",
+        "<b>Origin:</b> 1990  |  Released by: UNDP",
+        "Reflects gender disadvantage across reproductive health, empowerment, labour market.",
+        "Range: 0 (equality) to 1 (max inequality) — lower = better.",
+    ]:
+        add(_bullet(pt, st))
+
+    # Nugget: GII
+    ext(_nugget("GII", "Components of GII",
+        ["Health: Maternal mortality ratio, Adolescent birth rate",
+         "Empowerment: Parliamentary seats, Secondary education",
+         "Labour Market: Labour force participation rate"], st))
+
+    # 5.1.5 GSNI
+    add(_sub("5.1.5  Gender Social Norms Index (GSNI)", st))
+    ext(_img(img_dir, "Untitled_9.png", 4.5))
+    for pt in [
+        "<b>Origin:</b> 2019  |  Released by: UNDP",
+        "Quantifies biases against women across 4 dimensions.",
         "Coverage: 91 countries (subject to change).",
     ]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+        add(_bullet(pt, st))
 
-    ext(_sub("5.1.6  Multidimensional Poverty Index (MPI)", styles))
-    ext(_img(img_dir, "Untitled_10.png", 5))
-    ext(_img(img_dir, "Untitled_11.png", 7))
+    # 5.1.6 MPI
+    add(_sub("5.1.6  Multidimensional Poverty Index (MPI)", st))
+    ext(_img(img_dir, "Untitled_10.png", 4.5))
+    ext(_img(img_dir, "Untitled_11.png", 6))
     for pt in [
-        "<b>Origin:</b> 2010  |  <b>Released by:</b> OPHI and UNDP",
-        "Published annually in the Human Development Report.",
-        "Shows <i>how</i> people are poor — all deprivations, identifies the poorest.",
+        "<b>Origin:</b> 2010  |  Released by: OPHI and UNDP",
+        "Shows <i>how</i> people are poor — all deprivations identified.",
         "Coverage: ~100 countries (subject to change).",
     ]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+        add(_bullet(pt, st))
 
-    ext(_sub("5.2  Other Indices to Measure Economic Development", styles))
-    ext(_sub("5.2.2  World Happiness Index (WHI)", styles))
-    ext(_img(img_dir, "Untitled_12.png", 9))
-    for pt in [
-        "<b>Origin:</b> 2012  |  <b>Released by:</b> UN Sustainable Development Solutions Network",
-        "Judges country success by the happiness of its people.",
-        "7 components: Social Support, Healthy Life Expectancy, Freedom to make Life Choices, "
-        "Generosity, GDP per capita, Perception of Corruption, Dystopia.",
-    ]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+    # Nugget: MPI
+    ext(_nugget("MPI", "Dimensions of MPI",
+        ["Health (1/3): Nutrition, Child mortality",
+         "Education (1/3): Years of schooling, School attendance",
+         "Living Standards (1/3): Cooking fuel, Sanitation, "
+         "Drinking water, Electricity, Housing, Assets"], st))
 
-    ext(_sub("5.2.3  OECD Better Life Index", styles))
-    ext(_img(img_dir, "Screenshot_2023-12-11_114429.png", 9))
+    # 5.2 Other indices
+    add(_sub("5.2  Other Indices", st))
+
+    add(_sub("5.2.2  World Happiness Index (WHI)", st))
+    ext(_img(img_dir, "Untitled_12.png", 7))
     for pt in [
-        "Broader perspective beyond GDP across 11 dimensions.",
-        "No single ranking — users customise weights on the OECD website.",
-        "11 dimensions: Housing, Income, Jobs, Community, Education, Environment, "
-        "Governance, Health, Life Satisfaction, Safety, Work-Life Balance.",
+        "<b>Origin:</b> 2012  |  Released by: UN SDSN",
+        "7 components: Social Support, Life Expectancy, Freedom, "
+        "Generosity, GDP per capita, Corruption, Dystopia.",
     ]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+        add(_bullet(pt, st))
+
+    add(_sub("5.2.3  OECD Better Life Index", st))
+    ext(_img(img_dir, "Screenshot_2023-12-11_114429.png", 7))
+    for pt in [
+        "11 dimensions — no single ranking; users set own weights.",
+        "Dimensions: Housing, Income, Jobs, Community, Education, "
+        "Environment, Governance, Health, Life Satisfaction, Safety, Work-Life Balance.",
+    ]:
+        add(_bullet(pt, st))
 
     for title, desc in [
         ("5.2.1  Genuine Progress Indicator (GPI)",
-         "Alternative to GDP; accounts for income distribution, environmental degradation, "
-         "household and volunteer work. Calculated by independent research institutions."),
+         "Alternative to GDP; accounts for income distribution, "
+         "environmental degradation, household/volunteer work."),
         ("5.2.4  Physical Quality of Life Index (PQLI)",
-         "Developed by Morris David Morris in the 1970s. Components: Basic Literacy Rate, "
-         "Life Expectancy at Age 1, Infant Mortality Rate. Scores 0–100 (higher = better)."),
+         "Morris David Morris, 1970s. Components: Basic Literacy Rate, "
+         "Life Expectancy at Age 1, Infant Mortality Rate. Scores 0–100."),
     ]:
-        add(Paragraph(f"<b>{title}:</b>  {desc}", styles["body"]))
-        add(Spacer(1,3))
+        add(_sub(title, st))
+        add(_body(desc, st))
 
-    # 6.0 Developed vs Developing
-    ext(_bar("6.0  Developed vs Developing Economies", styles))
-    ext(_sub("6.1  Introduction", styles))
-    add(Paragraph(
+    add(_divider())
+
+    # ───────────────────────────────────────────────────────────
+    # 6. DEVELOPED vs DEVELOPING
+    # ───────────────────────────────────────────────────────────
+    add(_item_heading("6", "Developed vs Developing Economies", st))
+    add(_body(
         "World Bank categorises economies into <b>high income</b>, <b>middle income</b>, "
-        "and <b>low income</b>. High income = developed; low income = underdeveloped. "
-        "Developing economies show high growth potential.", styles["body"]))
+        "and <b>low income</b>.", st))
 
-    ext(_sub("6.2.1  Income-based Classification (World Bank 2024)", styles))
-    ext(_tbl(
-        ["Category", "GNI Per Capita (US $)"],
-        [
-            ["Low income", "$1,135 or less"],
-            ["Lower middle income", "$1,136 – $4,465"],
-            ["Upper middle income", "$4,466 – $13,845"],
-            ["High income", "$13,846 or more"],
-        ], styles))
+    add(_sub("6.2.1  World Bank Income Classification (2024)", st))
+    cw2 = COL_W / 2
+    wb_data = [
+        [Paragraph("<b>Category</b>", ParagraphStyle("th2", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE)),
+         Paragraph("<b>GNI Per Capita (US$)</b>", ParagraphStyle("th2", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE))],
+        [Paragraph("Low income",           ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("$1,135 or less",       ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5))],
+        [Paragraph("Lower middle income",  ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("$1,136 – $4,465",      ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5))],
+        [Paragraph("Upper middle income",  ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("$4,466 – $13,845",     ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5))],
+        [Paragraph("High income",          ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5)),
+         Paragraph("$13,846 or more",      ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5))],
+    ]
+    wb_tbl = Table(wb_data, colWidths=[cw2]*2,
+        style=TableStyle([
+            ("BACKGROUND",    (0,0),(-1,0), BLUE),
+            ("ROWBACKGROUNDS",(0,1),(-1,-1), [WHITE, LIGHT_BLUE]),
+            ("BOX",           (0,0),(-1,-1), 0.5, BLUE),
+            ("INNERGRID",     (0,0),(-1,-1), 0.3, colors.HexColor("#C5DCF0")),
+            ("TOPPADDING",    (0,0),(-1,-1), 3),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 3),
+            ("LEFTPADDING",   (0,0),(-1,-1), 4),
+            ("RIGHTPADDING",  (0,0),(-1,-1), 4),
+        ]))
+    add(wb_tbl)
+    add(Spacer(1, 4))
 
-    ext(_sub("6.2.2  Development-based Classification", styles))
+    add(_sub("6.2.2  Development-based Classification", st))
     for pt in [
-        "<b>Developed (MEDC)</b> — advanced economy with strong tech infrastructure. E.g. USA.",
-        "<b>Developing</b> — less industrialised, moving toward services/production. E.g. India, China.",
+        "<b>Developed (MEDC)</b> — advanced economy, strong tech infrastructure. E.g. USA.",
+        "<b>Developing</b> — less industrialised, moving toward services/production. E.g. India.",
         "<b>Least Developed (LDCs)</b> — severe structural impediments. E.g. Somalia, Sudan.",
     ]:
-        add(_b(pt, styles))
-    add(Spacer(1,4))
+        add(_bullet(pt, st))
 
-    ext(_sub("6.3  Common Characteristics of Developing Countries", styles))
+    add(_sub("6.3  Common Characteristics of Developing Countries", st))
     for c in ["Low GNP Per Capita", "Scarcity of Capital",
-              "Rapid population growth and high dependency burden",
-              "Low Levels of Productivity", "Technological Backwardness",
-              "High Levels of Unemployment", "Low Human Wellbeing",
-              "Wide Income Inequality", "High Poverty",
-              "Agrarian Economy", "Low Participation in Foreign Trade"]:
-        add(_b(c, styles))
+              "Rapid population growth", "Low Productivity",
+              "Technological Backwardness", "High Unemployment",
+              "Low Human Wellbeing", "Wide Income Inequality",
+              "High Poverty", "Agrarian Economy",
+              "Low Participation in Foreign Trade"]:
+        add(_bullet(c, st))
 
-    # 7.0 Composite Development Index
-    ext(_bar("7.0  Composite Development Index", styles))
-    add(Paragraph(
+    add(_divider())
+
+    # ───────────────────────────────────────────────────────────
+    # 7. COMPOSITE DEVELOPMENT INDEX
+    # ───────────────────────────────────────────────────────────
+    add(_item_heading("7", "Composite Development Index", st))
+    add(_body(
         "The <b>Raghuram Rajan Committee (2013)</b> proposed a <b>Composite Development "
         "Index</b> to determine underdevelopment of Indian states with "
-        "<b>10 equal-weight sub-components</b>:", styles["body"]))
+        "<b>10 equal-weight sub-components</b>.", st))
+
     for i, sc in enumerate([
         "Monthly per-capita consumption expenditure", "Education", "Health",
         "Household amenities", "Poverty rate", "Female literacy",
         "Percentage of SC/ST population", "Urbanisation rate",
         "Financial inclusion", "Connectivity",
     ], 1):
-        add(Paragraph(f"  {i}.  {sc}", styles["body_bullet"]))
+        add(_bullet(f"<b>{i}.</b>  {sc}", st))
 
-    ext(_nugget("Key Reminders", [
-        "Economic Growth is a subset of Economic Development.",
-        "HDI = Health + Education + Standard of Living.",
-        "A lower GII value indicates better gender equality.",
-        "PQLI was the first composite alternative to GDP.",
-        "Raghuram Rajan Committee (2013) → Composite Development Index for Indian states.",
-    ], styles))
+    # Final nugget
+    ext(_nugget("Reminders", "Key Points to Remember",
+        ["Economic Growth ⊂ Economic Development.",
+         "HDI = Health + Education + Standard of Living.",
+         "Lower GII = better gender equality.",
+         "PQLI = first composite alternative to GDP.",
+         "Raghuram Rajan Committee (2013) → Composite Development Index."], st))
 
-    add(Spacer(1,12))
-    add(HRFlowable(width="100%", thickness=1.5, color=GREEN))
-    add(Spacer(1,4))
-    add(Paragraph(
-        f"<i>Subject: {SUBJECT}  |  Chapter: {CHAPTER}</i>",
-        ParagraphStyle("end_note", fontName="Helvetica-Oblique",
-                       fontSize=8, textColor=GREY_TEXT, alignment=TA_CENTER)))
     return s
 
 
-# ── Entry-point ───────────────────────────────────────────────────────────────
+# ── Document builder ──────────────────────────────────────────────────────────
 def generate(output_path: str = "Economic_Growth_and_Development.pdf",
              img_dir: str | None = None) -> str:
     if img_dir is None:
@@ -567,21 +711,44 @@ def generate(output_path: str = "Economic_Growth_and_Development.pdf",
     print(f"[INFO] img_dir  = {img_dir}")
     print(f"[INFO] output   = {output_path}")
 
-    styles = _build_styles()
-    decor  = _PageDecor(img_dir)
-    story  = _build_story(styles, img_dir)
+    page_canvas = _PageCanvas(img_dir)
+    st = _styles()
+    content = _build_content(st, img_dir)
 
-    doc = SimpleDocTemplate(
-        output_path, pagesize=A4,
-        leftMargin=MARGIN_H, rightMargin=MARGIN_H,
-        topMargin=MARGIN_V + 2.1 * cm,
-        bottomMargin=MARGIN_V + 1.0 * cm,
-        title=f"{SUBJECT} – {CHAPTER}",
-        author="Anuj Jindal", subject=CHAPTER,
+    # ── Two-column page layout ────────────────────────────────────────────────
+    left_frame = Frame(
+        MARGIN_SIDE, MARGIN_BOTTOM,
+        COL_W, PAGE_H - MARGIN_TOP - MARGIN_BOTTOM,
+        leftPadding=0, rightPadding=0,
+        topPadding=0, bottomPadding=0,
+        id="left"
     )
-    doc.build(story, onFirstPage=decor, onLaterPages=decor)
+    right_frame = Frame(
+        MARGIN_SIDE + COL_W + COL_GAP, MARGIN_BOTTOM,
+        COL_W, PAGE_H - MARGIN_TOP - MARGIN_BOTTOM,
+        leftPadding=0, rightPadding=0,
+        topPadding=0, bottomPadding=0,
+        id="right"
+    )
+
+    two_col_template = PageTemplate(
+        id="TwoCol",
+        frames=[left_frame, right_frame],
+        onPage=page_canvas.draw,
+    )
+
+    doc = BaseDocTemplate(
+        output_path,
+        pagesize=A4,
+        pageTemplates=[two_col_template],
+        title=f"{SUBJECT} – {CHAPTER}",
+        author="Anuj Jindal",
+        subject=CHAPTER,
+    )
+
+    doc.build(content)
     kb = Path(output_path).stat().st_size // 1024
-    print(f"[INFO] Done ✓  {kb} KB")
+    print(f"[INFO] Done ✓  {kb} KB → {output_path}")
     return output_path
 
 

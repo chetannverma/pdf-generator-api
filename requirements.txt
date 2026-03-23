@@ -3,3 +3,4 @@ reportlab
 pillow
 requests
 gunicorn
+numpy
