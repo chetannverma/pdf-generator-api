@@ -1,39 +1,25 @@
 """
-generate_pdf.py  — FINAL v2 (matches Design Reference exactly)
-──────────────────────────────────────────────────────────────
-Reference design:
-  • Header  : white box top-left with logo | right = Subject | Chapter | Date
-  • Layout  : TWO-COLUMN newspaper style
-  • Section : Full-width green bar "ECONOMIC GROWTH AND DEVELOPMENT"
-  • Items   : Bold blue numbered heading, body text, bullet points
-  • Nuggets : Bordered box with pencil icon header
-  • Footer  : phone left | website centre | page-number green box right
-  • Watermark: LOGO-CROP.png centred, 20% opacity, 550×550 px
-  • Font    : Helvetica throughout (matches reference)
+generate_pdf.py — FINAL (verbatim HTML content, reference layout)
+Two-column newspaper style matching Design_Reference_File.pdf
+All text is taken verbatim from the HTML notes — no paraphrasing.
 """
 
-import io
-import os
-import sys
-import argparse
-import numpy as np
+import io, os, sys, argparse, numpy as np
 from datetime import date
 from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.units import cm, mm
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
+from reportlab.lib.units import cm
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import (
     BaseDocTemplate, PageTemplate, Frame,
     Paragraph, Spacer, Table, TableStyle,
-    HRFlowable, Image, KeepTogether, PageBreak,
-    NextPageTemplate
+    HRFlowable, Image, KeepTogether
 )
-from reportlab.platypus.flowables import Flowable
 from reportlab.pdfgen import canvas as pdfcanvas
-from reportlab.lib.utils import ImageReader
 
 # ── Brand ─────────────────────────────────────────────────────────────────────
 BLUE        = colors.HexColor("#1B71AC")
@@ -41,10 +27,9 @@ GREEN       = colors.HexColor("#2AB573")
 LIGHT_GREEN = colors.HexColor("#E8F5EE")
 LIGHT_BLUE  = colors.HexColor("#EAF4FB")
 WHITE       = colors.white
-DARK        = colors.HexColor("#1A1A2E")
+DARK        = colors.HexColor("#222222")
 GREY        = colors.HexColor("#555555")
-LIGHT_GREY  = colors.HexColor("#F2F2F2")
-PAGE_BG     = colors.HexColor("#FFFFFF")
+LIGHT_GREY  = colors.HexColor("#F4F4F4")
 
 HEADER_LOGO_FILE    = "LOGO-FULL-01.png"
 WATERMARK_LOGO_FILE = "LOGO-CROP.png"
@@ -54,701 +39,553 @@ CHAPTER = "Economic Growth and Development"
 PHONE   = "+91 9999466225"
 WEBSITE = "www.anujjindal.in"
 
-PAGE_W, PAGE_H = A4   # 595 × 842 pt
-MARGIN_TOP    = 2.8 * cm   # space for header
-MARGIN_BOTTOM = 1.6 * cm   # space for footer
-MARGIN_SIDE   = 1.2 * cm
-COL_GAP       = 0.4 * cm
-COL_W         = (PAGE_W - 2 * MARGIN_SIDE - COL_GAP) / 2   # ~8.6 cm each
+PAGE_W, PAGE_H = A4
+MARGIN_SIDE   = 1.1 * cm
+MARGIN_TOP    = 2.6 * cm
+MARGIN_BOTTOM = 1.5 * cm
+COL_GAP       = 0.45 * cm
+COL_W         = (PAGE_W - 2 * MARGIN_SIDE - COL_GAP) / 2
+HEADER_H      = 1.75 * cm
+FOOTER_H      = 0.85 * cm
 
-HEADER_H = 1.8 * cm
-FOOTER_H = 0.85 * cm
+
+# ── Image helpers ─────────────────────────────────────────────────────────────
+def _load(img_dir: Path, fname: str) -> bytes | None:
+    p = img_dir / fname
+    return p.read_bytes() if p.exists() else None
 
 
-# ── Logo pre-processor ─────────────────────────────────────────────────────────
-def _process_header_logo(data: bytes) -> ImageReader | None:
-    """
-    LOGO-FULL-01.png has a BLACK background with BLUE text (#1B71AC).
-    The header uses a WHITE background, so we need the logo as-is with
-    black background removed (made transparent).
-    Green mark → keep. Blue text → keep as blue (shows on white bg).
-    Black bg → transparent.
-    """
+def _prep_logo(data: bytes) -> ImageReader | None:
+    """Strip black background from LOGO-FULL-01 using numpy alpha masking."""
     try:
-        from PIL import Image as PILImage
-        img = PILImage.open(io.BytesIO(data)).convert("RGBA")
-        arr = np.array(img, dtype=np.float32)
-        R, G, B, A = arr[:,:,0], arr[:,:,1], arr[:,:,2], arr[:,:,3]
-
-        out = arr.copy()
-        # Black/near-black pixels → transparent
-        is_black = (R < 50) & (G < 50) & (B < 50)
-        out[is_black, 3] = 0  # alpha = 0 → transparent
-
-        result = PILImage.fromarray(out.astype(np.uint8), "RGBA")
-        buf = io.BytesIO()
-        result.save(buf, format="PNG")
-        buf.seek(0)
+        from PIL import Image as PIL
+        img = PIL.open(io.BytesIO(data)).convert("RGBA")
+        arr = np.array(img, dtype=np.uint8)
+        R, G, B = arr[:,:,0], arr[:,:,1], arr[:,:,2]
+        black = (R < 50) & (G < 50) & (B < 50)
+        arr[black, 3] = 0
+        result = PIL.fromarray(arr, "RGBA")
+        buf = io.BytesIO(); result.save(buf, "PNG"); buf.seek(0)
         return ImageReader(buf)
     except Exception as e:
-        print(f"[WARN] Header logo processing error: {e}", file=sys.stderr)
-        return None
+        print(f"[WARN] logo: {e}", file=sys.stderr); return None
 
 
-def _process_watermark(data: bytes) -> ImageReader | None:
-    """Resize to 550×550 px and apply 20% opacity."""
+def _prep_watermark(data: bytes) -> ImageReader | None:
+    """Resize to 550×550 and set 20% opacity."""
     try:
-        from PIL import Image as PILImage
-        img = PILImage.open(io.BytesIO(data)).convert("RGBA")
-        img = img.resize((550, 550), PILImage.LANCZOS)
-        r, g, b, a = img.split()
-        a = a.point(lambda x: int(x * 0.20))
+        from PIL import Image as PIL
+        img = PIL.open(io.BytesIO(data)).convert("RGBA").resize((550,550), PIL.LANCZOS)
+        r,g,b,a = img.split()
+        a = a.point(lambda x: int(x*0.20))
         img.putalpha(a)
-        buf = io.BytesIO()
-        img.save(buf, format="PNG")
-        buf.seek(0)
+        buf = io.BytesIO(); img.save(buf,"PNG"); buf.seek(0)
         return ImageReader(buf)
     except Exception as e:
-        print(f"[WARN] Watermark processing error: {e}", file=sys.stderr)
-        return None
+        print(f"[WARN] watermark: {e}", file=sys.stderr); return None
 
 
-def _load_file(img_dir: Path, filename: str) -> bytes | None:
-    p = img_dir / filename
-    if p.exists():
-        return p.read_bytes()
-    print(f"[WARN] Not found: {p}", file=sys.stderr)
-    return None
-
-
-# ── Page canvas (header / footer / watermark) ─────────────────────────────────
-class _PageCanvas:
+# ── Page canvas ───────────────────────────────────────────────────────────────
+class _Canvas:
     def __init__(self, img_dir: Path):
-        hdata = _load_file(img_dir, HEADER_LOGO_FILE)
-        self._logo   = _process_header_logo(hdata) if hdata else None
-        wmdata = _load_file(img_dir, WATERMARK_LOGO_FILE)
-        self._wm     = _process_watermark(wmdata) if wmdata else None
-        self._date   = date.today().strftime("%d %B %Y")
+        self._logo = _prep_logo(_load(img_dir, HEADER_LOGO_FILE) or b"") or None
+        self._wm   = _prep_watermark(_load(img_dir, WATERMARK_LOGO_FILE) or b"") or None
+        self._date = date.today().strftime("%d %B %Y")
 
-    def draw(self, cv: pdfcanvas.Canvas, doc):
+    def __call__(self, cv: pdfcanvas.Canvas, doc):
         cv.saveState()
         w, h = PAGE_W, PAGE_H
 
-        # ── Watermark behind everything ───────────────────────────────────────
+        # Watermark (behind content)
         if self._wm:
             try:
-                wm_pt = 8 * cm
-                cv.drawImage(self._wm,
-                             (w - wm_pt) / 2, (h - wm_pt) / 2,
-                             width=wm_pt, height=wm_pt,
+                s = 7.5*cm
+                cv.drawImage(self._wm, (w-s)/2, (h-s)/2,
+                             width=s, height=s,
                              preserveAspectRatio=True, mask="auto")
-            except Exception as e:
-                print(f"[WARN] WM draw: {e}", file=sys.stderr)
+            except: pass
 
         # ── Header ────────────────────────────────────────────────────────────
-        # White background bar
+        # White background
         cv.setFillColor(WHITE)
         cv.rect(0, h - HEADER_H, w, HEADER_H, fill=1, stroke=0)
+        # Bottom blue border
+        cv.setStrokeColor(BLUE); cv.setLineWidth(1.5)
+        cv.line(0, h-HEADER_H, w, h-HEADER_H)
 
-        # Bottom border line of header (thin blue)
-        cv.setStrokeColor(BLUE)
-        cv.setLineWidth(1.5)
-        cv.line(0, h - HEADER_H, w, h - HEADER_H)
-
-        # Logo box — white rounded rect top-left
-        logo_box_w = 5.2 * cm
-        logo_box_h = HEADER_H - 4
-        logo_box_x = MARGIN_SIDE
-        logo_box_y = h - HEADER_H + 2
-
-        # Draw logo inside the box
+        # Logo — top left on white background
         if self._logo:
             try:
-                logo_h = logo_box_h * 0.78
-                logo_w = logo_h * 3.8
-                lx = logo_box_x + (logo_box_w - logo_w) / 2
-                ly = logo_box_y + (logo_box_h - logo_h) / 2
-                cv.drawImage(self._logo, lx, ly,
-                             width=logo_w, height=logo_h,
+                lh = HEADER_H * 0.72
+                lw = lh * 4.0
+                cv.drawImage(self._logo,
+                             MARGIN_SIDE,
+                             h - HEADER_H + (HEADER_H-lh)/2,
+                             width=lw, height=lh,
                              preserveAspectRatio=True, mask="auto")
-            except Exception as e:
-                print(f"[WARN] Logo draw: {e}", file=sys.stderr)
+            except: pass
 
-        # Right side: Subject | Chapter | Date
+        # Right: subject | chapter | date
         cv.setFont("Helvetica", 7.5)
         cv.setFillColor(GREY)
-        right_text = f"{SUBJECT}  |  {CHAPTER}  |  {self._date}"
         cv.drawRightString(w - MARGIN_SIDE,
-                           h - HEADER_H/2 - 3, right_text)
+                           h - HEADER_H/2 - 3,
+                           f"{SUBJECT}  |  {CHAPTER}  |  {self._date}")
 
         # ── Footer ────────────────────────────────────────────────────────────
-        # Light grey background
         cv.setFillColor(LIGHT_GREY)
         cv.rect(0, 0, w, FOOTER_H, fill=1, stroke=0)
-
-        # Top border line of footer
-        cv.setStrokeColor(colors.HexColor("#CCCCCC"))
-        cv.setLineWidth(0.5)
+        cv.setStrokeColor(colors.HexColor("#CCCCCC")); cv.setLineWidth(0.5)
         cv.line(0, FOOTER_H, w, FOOTER_H)
 
-        # Phone left
-        cv.setFont("Helvetica", 8)
-        cv.setFillColor(GREY)
-        cv.drawString(MARGIN_SIDE, FOOTER_H / 2 - 3, PHONE)
+        cv.setFont("Helvetica", 8); cv.setFillColor(GREY)
+        cv.drawString(MARGIN_SIDE, FOOTER_H/2 - 3, PHONE)
+        cv.drawCentredString(w/2, FOOTER_H/2 - 3, WEBSITE)
 
-        # Website centre
-        cv.drawCentredString(w / 2, FOOTER_H / 2 - 3, WEBSITE)
-
-        # Page number — green box on right (matches reference exactly)
-        pg_box_w = 1.2 * cm
-        pg_box_h = FOOTER_H
+        # Green page-number box on right (exactly as reference)
+        pgw = 1.15*cm
         cv.setFillColor(GREEN)
-        cv.rect(w - pg_box_w, 0, pg_box_w, pg_box_h, fill=1, stroke=0)
-        cv.setFont("Helvetica-Bold", 9)
-        cv.setFillColor(WHITE)
-        cv.drawCentredString(w - pg_box_w / 2, FOOTER_H / 2 - 3,
-                             str(doc.page))
+        cv.rect(w-pgw, 0, pgw, FOOTER_H, fill=1, stroke=0)
+        cv.setFont("Helvetica-Bold", 9); cv.setFillColor(WHITE)
+        cv.drawCentredString(w - pgw/2, FOOTER_H/2 - 3, str(doc.page))
 
         cv.restoreState()
 
 
 # ── Styles ────────────────────────────────────────────────────────────────────
-def _styles() -> dict:
-    def s(name, **kw):
-        return ParagraphStyle(name=name, **kw)
-
-    return {
-        # Section heading bar text
-        "section_bar": s("section_bar",
-            fontName="Helvetica-Bold", fontSize=10, leading=14,
-            textColor=WHITE, spaceAfter=0),
-
-        # Numbered item title (bold blue)
-        "item_title": s("item_title",
-            fontName="Helvetica-Bold", fontSize=9, leading=13,
-            textColor=BLUE, spaceAfter=2, spaceBefore=6),
-
-        # Sub-heading under item
-        "sub_head": s("sub_head",
-            fontName="Helvetica-Bold", fontSize=8.5, leading=12,
-            textColor=DARK, spaceAfter=1, spaceBefore=3),
-
-        # Body text
-        "body": s("body",
-            fontName="Helvetica", fontSize=8.5, leading=12.5,
-            textColor=DARK, spaceAfter=2, alignment=TA_LEFT),
-
-        # Bullet point
-        "bullet": s("bullet",
-            fontName="Helvetica", fontSize=8.5, leading=12.5,
-            textColor=DARK, leftIndent=10, firstLineIndent=-8,
-            spaceAfter=1.5),
-
-        # Source line
-        "source": s("source",
-            fontName="Helvetica-Oblique", fontSize=7.5, leading=11,
-            textColor=GREY, spaceAfter=4, spaceBefore=2),
-
-        # Knowledge nugget title
-        "nugget_head": s("nugget_head",
-            fontName="Helvetica-Bold", fontSize=8.5, leading=12,
-            textColor=DARK, spaceAfter=1),
-
-        # Knowledge nugget body
-        "nugget_body": s("nugget_body",
-            fontName="Helvetica", fontSize=8, leading=12,
-            textColor=DARK, leftIndent=10, firstLineIndent=-8,
-            spaceAfter=1.5),
-
-        # About sub-section inside nugget
-        "nugget_sub": s("nugget_sub",
-            fontName="Helvetica", fontSize=8, leading=11,
-            textColor=DARK, spaceAfter=1),
-    }
-
-
-# ── Flowable helpers ──────────────────────────────────────────────────────────
-def _section_bar(title: str, st: dict) -> list:
-    """Full-width green section header bar — matches reference."""
-    tbl = Table(
-        [[Paragraph(title.upper(), st["section_bar"])]],
-        colWidths=[COL_W],
-        style=TableStyle([
-            ("BACKGROUND",    (0,0),(-1,-1), GREEN),
-            ("TOPPADDING",    (0,0),(-1,-1), 5),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 5),
-            ("LEFTPADDING",   (0,0),(-1,-1), 8),
-            ("RIGHTPADDING",  (0,0),(-1,-1), 8),
-        ])
+def ST():
+    def s(n, **k): return ParagraphStyle(n, **k)
+    return dict(
+        # Section green bar
+        sec  = s("sec",  fontName="Helvetica-Bold", fontSize=9.5, leading=13,
+                 textColor=WHITE),
+        # Numbered heading (bold blue)
+        h1   = s("h1",   fontName="Helvetica-Bold", fontSize=9, leading=13,
+                 textColor=BLUE, spaceBefore=6, spaceAfter=2),
+        # h2 sub-heading (bold dark)
+        h2   = s("h2",   fontName="Helvetica-Bold", fontSize=8.5, leading=12,
+                 textColor=DARK, spaceBefore=4, spaceAfter=1),
+        # h3 smaller sub-heading
+        h3   = s("h3",   fontName="Helvetica-Bold", fontSize=8, leading=11.5,
+                 textColor=DARK, spaceBefore=3, spaceAfter=1),
+        # Body paragraph
+        body = s("body", fontName="Helvetica", fontSize=8.5, leading=12.5,
+                 textColor=DARK, spaceAfter=2),
+        # Bullet
+        bul  = s("bul",  fontName="Helvetica", fontSize=8.5, leading=12.5,
+                 textColor=DARK, leftIndent=10, firstLineIndent=-8, spaceAfter=1.5),
+        # Note / small italic
+        note = s("note", fontName="Helvetica-Oblique", fontSize=7.5, leading=11,
+                 textColor=GREY, spaceAfter=2),
+        # Nugget header
+        ngh  = s("ngh",  fontName="Helvetica-Bold", fontSize=8.5, leading=12,
+                 textColor=DARK, spaceAfter=1),
+        # Nugget bullet
+        ngb  = s("ngb",  fontName="Helvetica", fontSize=8, leading=12,
+                 textColor=DARK, leftIndent=10, firstLineIndent=-8, spaceAfter=1.5),
+        # Table header cell
+        thdr = s("thdr", fontName="Helvetica-Bold", fontSize=7.5, leading=11,
+                 textColor=WHITE, alignment=TA_CENTER),
+        # Table cell
+        tcl  = s("tcl",  fontName="Helvetica", fontSize=7.5, leading=11,
+                 textColor=DARK),
     )
-    return [Spacer(1, 4), tbl, Spacer(1, 3)]
 
 
-def _item_heading(num: str, title: str, st: dict) -> Paragraph:
-    return Paragraph(f"<b>{num}. {title}</b>", st["item_title"])
+# ── Flowable builders ─────────────────────────────────────────────────────────
+def sec_bar(text, st):
+    t = Table([[Paragraph(text.upper(), st["sec"])]],
+              colWidths=[COL_W],
+              style=TableStyle([
+                  ("BACKGROUND",(0,0),(-1,-1),GREEN),
+                  ("TOPPADDING",(0,0),(-1,-1),5),("BOTTOMPADDING",(0,0),(-1,-1),5),
+                  ("LEFTPADDING",(0,0),(-1,-1),8),("RIGHTPADDING",(0,0),(-1,-1),8),
+              ]))
+    return [Spacer(1,5), t, Spacer(1,4)]
 
 
-def _sub(title: str, st: dict) -> Paragraph:
-    return Paragraph(f"<b>{title}</b>", st["sub_head"])
+def H1(text, st): return Paragraph(text, st["h1"])
+def H2(text, st): return Paragraph(text, st["h2"])
+def H3(text, st): return Paragraph(text, st["h3"])
+def P(text, st):  return Paragraph(text, st["body"])
+def B(text, st):  return Paragraph(f"• {text}", st["bul"])
+def NOTE(text, st): return Paragraph(text, st["note"])
+def DIV(): return HRFlowable(width="100%", thickness=0.4,
+                              color=colors.HexColor("#DDDDDD"),
+                              spaceAfter=3, spaceBefore=3)
 
 
-def _body(text: str, st: dict) -> Paragraph:
-    return Paragraph(text, st["body"])
+def nugget(title, items, st):
+    """Knowledge Nuggets box — green top border, icon, bold title, bullets."""
+    rows = [Paragraph(f'✏  <font color="#2AB573"><b>Knowledge Nuggets</b></font>',
+                      st["ngh"]),
+            Paragraph(f"<b>{title}</b>", st["h3"])]
+    for it in items:
+        rows.append(Paragraph(f"• {it}", st["ngb"]))
+    inner = Table([[r] for r in rows],
+                  colWidths=[COL_W-18],
+                  style=TableStyle([("TOPPADDING",(0,0),(-1,-1),1.5),
+                                    ("BOTTOMPADDING",(0,0),(-1,-1),1.5),
+                                    ("LEFTPADDING",(0,0),(-1,-1),0),
+                                    ("RIGHTPADDING",(0,0),(-1,-1),0)]))
+    outer = Table([[inner]], colWidths=[COL_W],
+                  style=TableStyle([
+                      ("BOX",(0,0),(-1,-1),0.8,colors.HexColor("#BBBBBB")),
+                      ("LINEABOVE",(0,0),(-1,0),3,GREEN),
+                      ("BACKGROUND",(0,0),(-1,-1),LIGHT_GREEN),
+                      ("TOPPADDING",(0,0),(-1,-1),6),("BOTTOMPADDING",(0,0),(-1,-1),6),
+                      ("LEFTPADDING",(0,0),(-1,-1),8),("RIGHTPADDING",(0,0),(-1,-1),8),
+                  ]))
+    return [Spacer(1,4), outer, Spacer(1,4)]
 
 
-def _bullet(text: str, st: dict) -> Paragraph:
-    return Paragraph(f"• {text}", st["bullet"])
-
-
-def _source(text: str, st: dict) -> Paragraph:
-    return Paragraph(f"<i>Source: {text}</i>", st["source"])
-
-
-def _nugget(heading: str, sub_title: str, items: list, st: dict) -> list:
-    """
-    Knowledge Nuggets box — matches reference exactly:
-    Green top border, pencil icon + 'Knowledge Nuggets' header,
-    bold sub-title, bullet points.
-    """
-    content = []
-    # Header row: pencil icon text + "Knowledge Nuggets"
-    content.append(
-        Paragraph(f'✏  <font color="#2AB573"><b>Knowledge Nuggets</b></font>',
-                  st["nugget_head"])
-    )
-    content.append(Paragraph(f"<b>{sub_title}</b>", st["sub_head"]))
-    for item in items:
-        content.append(Paragraph(f"• {item}", st["nugget_body"]))
-
-    inner = Table(
-        [[c] for c in content],
-        colWidths=[COL_W - 16],
-        style=TableStyle([
-            ("TOPPADDING",    (0,0),(-1,-1), 1.5),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 1.5),
-            ("LEFTPADDING",   (0,0),(-1,-1), 0),
-            ("RIGHTPADDING",  (0,0),(-1,-1), 0),
-        ])
-    )
-    outer = Table(
-        [[inner]],
-        colWidths=[COL_W],
-        style=TableStyle([
-            ("BOX",           (0,0),(-1,-1), 1,   colors.HexColor("#BBBBBB")),
-            ("LINEABOVE",     (0,0),(-1, 0), 3,   GREEN),
-            ("BACKGROUND",    (0,0),(-1,-1), LIGHT_GREEN),
-            ("TOPPADDING",    (0,0),(-1,-1), 6),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 6),
-            ("LEFTPADDING",   (0,0),(-1,-1), 8),
-            ("RIGHTPADDING",  (0,0),(-1,-1), 8),
-        ])
-    )
-    return [Spacer(1, 4), outer, Spacer(1, 4)]
-
-
-def _divider() -> HRFlowable:
-    return HRFlowable(width="100%", thickness=0.4,
-                      color=colors.HexColor("#DDDDDD"), spaceAfter=3)
-
-
-def _img(img_dir: Path, fname: str, h: float = 4.5) -> list:
+def img(img_dir, fname, h=4.5):
     p = img_dir / fname
     if p.exists():
-        return [Image(str(p), width=COL_W, height=h*cm,
-                      kind="proportional"), Spacer(1, 4)]
+        return [Image(str(p), width=COL_W, height=h*cm, kind="proportional"),
+                Spacer(1,4)]
     return []
 
 
-# ── Content ───────────────────────────────────────────────────────────────────
-def _build_content(st: dict, img_dir: Path) -> list:
+def comparison_table(headers, rows, st):
+    cw = COL_W / len(headers)
+    data = [[Paragraph(h, st["thdr"]) for h in headers]]
+    for row in rows:
+        data.append([Paragraph(c, st["tcl"]) for c in row])
+    t = Table(data, colWidths=[cw]*len(headers), repeatRows=1)
+    t.setStyle(TableStyle([
+        ("BACKGROUND",(0,0),(-1,0),BLUE),
+        ("ROWBACKGROUNDS",(0,1),(-1,-1),[WHITE,LIGHT_BLUE]),
+        ("BOX",(0,0),(-1,-1),0.5,BLUE),
+        ("INNERGRID",(0,0),(-1,-1),0.3,colors.HexColor("#C5DCF0")),
+        ("TOPPADDING",(0,0),(-1,-1),3),("BOTTOMPADDING",(0,0),(-1,-1),3),
+        ("LEFTPADDING",(0,0),(-1,-1),3),("RIGHTPADDING",(0,0),(-1,-1),3),
+        ("VALIGN",(0,0),(-1,-1),"TOP"),
+    ]))
+    return [t, Spacer(1,5)]
+
+
+# ── Story — verbatim content from HTML ───────────────────────────────────────
+def build_story(st, img_dir):
     s = []
-    add  = s.append
-    ext  = s.extend
+    add = s.append
+    ext = s.extend
 
-    # ═══════════════════════════════════════════════════════════
-    # SECTION BAR
-    # ═══════════════════════════════════════════════════════════
-    ext(_section_bar("Economic Growth and Development", st))
+    # ═══════════════ SECTION BAR ═══════════════
+    ext(sec_bar("Economic Growth and Development", st))
 
-    # ───────────────────────────────────────────────────────────
-    # 1. ECONOMIC GROWTH
-    # ───────────────────────────────────────────────────────────
-    add(_item_heading("1", "Economic Growth — Meaning and Importance", st))
-    add(_body(
-        "It is an increase in the level of output of goods and services that "
-        "is sustained over a long period of time, measured in terms of value added.", st))
-    add(_body(
-        "<b>Economic growth rate</b> = (Change in GDP) / (Last Year's GDP) × 100", st))
+    # ═══ 1.0 Economic Growth ═══
+    add(H1("1.0 Economic Growth", st))
 
-    for pt in [
-        "Refers to growth of <b>potential output</b> i.e. production at full employment.",
-        "A <b>dynamic concept</b> — continuous expansion in level of output.",
-        "<b>Commodity Market:</b> leads to increased output and newer, better products.",
-        "<b>Factor Market:</b> improves workforce skills and produces more efficient machinery.",
-        "<b>Structural Shift:</b> moves economy from rural/agricultural to urban/industrial.",
-    ]:
-        add(_bullet(pt, st))
+    add(H2("1.1 Meaning and Importance", st))
+    add(B("It is an increase in the level of output of goods and services that is sustained over a long period of time, measured in terms of value added.", st))
+    add(B("Economic growth rate = (Change in GDP)/(Last Year's GDP) x 100", st))
+    add(B("In economics, economic growth theory typically refers to growth of potential output i.e. production at full employment.", st))
+    add(B("Process of economic growth is essentially a dynamic concept and refers to a continuous expansion in level of output.", st))
+    add(B("Economic Growth in Commodity Market - In the commodity markets, economic growth leads to not only increased output but also to newer and, many times, better products.", st))
+    add(B("Economic Growth in Factor Market - In the factor markets, economic growth brings improvements in skills of workforce and/or more efficient and/or safer types of machinery.", st))
+    add(B("Economic Growth begets Structural Shift - The process of economic growth may also lead to structural shifts in an economy.", st))
+    add(B("We can also say that the source of income generation in an economy shifts from one to another. This means that the economy moves away from being largely rural and agriculture-based economy to urban and industry-dominated economy.", st))
 
-    ext(_img(img_dir, "Untitled.png", 5))
+    ext(img(img_dir, "Untitled.png", 5))
 
-    add(_sub("1.2  Importance of Economic Growth", st))
-    for pt in ["Poverty alleviation",
-               "Wider availability for human choices and economic activities",
-               "Resolves social issues", "Improves standard of living",
-               "Better technology"]:
-        add(_bullet(pt, st))
+    add(H2("1.2 Importance of Economic Growth", st))
+    for t in ["Poverty alleviation",
+              "Wider availability for human choices and economic activities",
+              "Resolves social issues",
+              "Improves standard of living",
+              "Better technology"]:
+        add(B(t, st))
 
-    add(_sub("1.3  Factors Affecting Economic Growth", st))
-    for title, desc in [
-        ("Capital Formation (Investment)",
-         "More capital investment → more production → higher growth."),
-        ("Capital-Output Ratio",
-         "Units of capital per unit of output. Lower ratio = higher efficiency."),
-        ("Occupational Structure",
-         "Efficient labour utilisation boosts overall productivity."),
-        ("Technological Progress",
-         "Enables more output from the same resources."),
-    ]:
-        add(_bullet(f"<b>{title}</b> — {desc}", st))
+    add(H2("1.3 Factors Affecting Economic Growth", st))
+    add(B("Capital Formation (Investment) - More capital investment in an economy transforms into more production. More production means more economic growth. Hence, increasing investment in an economy also increases the growth of an economy.", st))
+    add(B("Capital-Output Ratio - The term 'capital-output ratio' refers to the number of units of capital that are required in order to produce one unit of output. A lower capital-output ratio typically indicates higher efficiency in producing output with less capital.", st))
+    add(B("A lower capital-output ratio can suggest higher efficiency in utilizing capital for production, which can positively impact economic growth by increasing productivity.", st))
+    add(B("A lower ratio might indicate that less capital is required to generate a given level of output, potentially freeing up capital for further investment in other sectors or new technologies, which could spur growth.", st))
+    add(B("Sometimes, a lower capital-output ratio might result from technological advancement or innovation that allows for more output with the same or less capital. This can contribute to sustained economic growth by fostering innovation and progress.", st))
+    add(B("There should be an optimal balance between capital and output for sustainable growth. Extremely low capital-output ratios might suggest underinvestment, while extremely high ratios might indicate inefficient use of resources.", st))
+    add(B("Occupational Structure - Another factor which determines economic growth process is the occupational structure of the working population. The efficient utilization of labor will further boost the overall level of productivity of the economy.", st))
+    add(B("Technological Progress - Technology makes it possible to produce more from the same quantity of resources (or factors of production). This boosts the potential level of output of the economy.", st))
 
-    add(_sub("1.4  Limitations of Economic Growth", st))
-    for pt in [
-        "<b>Inequality of Income</b> — early-stage growth worsens income distribution.",
-        "<b>Pollution &amp; Negative Externalities</b> — increased output pressures the environment.",
-        "<b>Loss of Non-Renewable Resources</b> — more production depletes finite resources.",
-    ]:
-        add(_bullet(pt, st))
+    add(H2("1.4 Limitations of Economic Growth", st))
+    add(B("Inequality of income - The unequal distribution of income is the first limitation of economic growth. There is evidence to suggest that, at least in the initial stages of development, economic growth tends to worsen the distribution of income.", st))
+    add(B("Pollution (and other negative externalities) - The drive for increased output tends to put more and more pressure on the environment and the result is increased pollution and environmental degradation.", st))
+    add(B("Loss of non-renewable resources - The more we want to produce, the more resources we need to do that. This leads to the loss of non-renewable resources.", st))
+    add(DIV())
 
-    add(Spacer(1, 4))
-    add(_divider())
+    # ═══ 2.0 Economic Development ═══
+    add(H1("2.0 Economic Development", st))
 
-    # ───────────────────────────────────────────────────────────
-    # 2. ECONOMIC DEVELOPMENT
-    # ───────────────────────────────────────────────────────────
-    add(_item_heading("2", "Economic Development — Meaning and Importance", st))
-    add(_body(
-        "A sustained, long-term increase in economic well-being, standard of living, and "
-        "overall prosperity. A <b>broader concept</b> that includes economic growth.", st))
-    add(_body(
-        "Encompasses improvements beyond GDP: quality of life, poverty and inequality "
-        "reduction, technology, infrastructure, education, and healthcare.", st))
+    add(H2("2.1 Meaning and Importance", st))
+    add(B("Economic development refers to a sustained, long-term increase in the economic well-being, standard of living, and overall prosperity of a country or region. It is a broader concept and includes Economic Growth as well because without economic growth, economic development cannot happen.", st))
+    add(B("It involves various aspects beyond mere growth in GDP or income and encompasses improvements in the quality of life, reduction of poverty, inequality, and unemployment, as well as advancements in technology, infrastructure, education, healthcare, and social institutions.", st))
+    add(B("Importance -", st))
+    for t in ["Improved Quality of Life","Poverty Reduction","Enhanced Human Capital",
+              "Increased Employment","Stimulated Innovation and Technological Advancement",
+              "Infrastructure Development","Social Stability and Equity",
+              "Environmental Sustainability","Institutional and Political Stability"]:
+        add(B(t, st))
 
-    add(_sub("Importance", st))
-    for pt in ["Improved Quality of Life", "Poverty Reduction", "Enhanced Human Capital",
-               "Increased Employment", "Stimulated Innovation",
-               "Infrastructure Development", "Social Stability and Equity",
-               "Environmental Sustainability", "Institutional and Political Stability"]:
-        add(_bullet(pt, st))
+    add(H2("2.2 Evolution of Economic Development", st))
+    add(B("Till 1960s, economic development was often used as a synonym of economic growth.", st))
+    add(B("Overtime, two different approaches of measuring Economic Development evolved, which are:", st))
+    add(B("Traditional Approach -", st))
+    add(B("It opined that economic growth gets converted into economic development", st))
+    add(B("It believed in sustained annual increase in GDP at the rate of 5 to 7 percent or more", st))
+    add(B("Structural transformation of an agrarian economy into an industrial economy", st))
+    add(B("Modern Approach -", st))
+    add(B("It is not limited to measuring economic development vis-a-vis economic growth. It measures economic development on a broader level.", st))
 
-    add(_sub("2.2  Evolution of Economic Development", st))
-    add(_body("Till 1960s, used as a synonym of economic growth. Two approaches emerged:", st))
-    add(_bullet("<b>Traditional Approach</b> — focused on GDP growth of 5–7% p.a.; "
-                "structural shift from agrarian to industrial; trickle-down effect.", st))
-    add(_bullet("<b>Modern Approach</b> — broader, multidimensional beyond GDP growth.", st))
+    add(H2("2.3 Traditional and Modern Approaches", st))
+    add(B("Traditional Approach - The traditional approach to economic development primarily focused on achieving growth in a nation's Gross Domestic Product (GDP) as the primary indicator of progress.", st))
+    add(B("This approach, prevalent until the mid-20th century, emphasized industrialization, capital accumulation, and increasing output as the means to promote development.", st))
+    add(B("It is assumed that the benefit of changes in GDP would trickle down to people in one form or another. This is known as the 'trickle-down effect'.", st))
+    add(B("Key features of the traditional approach to economic development include:", st))
+    add(B("Modern Approach - The modern approach to economic development encompasses a more comprehensive and multidimensional perspective, recognizing that economic growth alone does not guarantee overall development. This approach emphasizes a broader set of goals and strategies to achieve sustainable and inclusive development.", st))
+    add(B("Some of the key aspects of the modern approach:", st))
 
-    ext(_img(img_dir, "Untitled_1.png", 5))
-    ext(_img(img_dir, "Untitled_2.png", 5))
+    ext(img(img_dir, "Untitled_1.png", 5))
+    ext(img(img_dir, "Untitled_2.png", 5))
+    add(DIV())
 
-    add(_divider())
+    # ═══ 3.0 Growth vs Development ═══
+    add(H1("3.0 Economic Growth v/s Economic Development", st))
+    ext(comparison_table(
+        ["Basis of Distinction", "Economic Growth", "Economic Development"],
+        [
+            ["Meaning",
+             "It is an increase in the level of output of goods and services that is sustained over a long period of time.",
+             "Economic development can be referred as the quantitative and qualitative changes in the economy."],
+            ["Parameters",
+             "Economic growth is measured in terms of rise in GDP or market productivity.",
+             "Economic development focuses on the spectrum of spheres ranging from health, education, employment, safety, environmental sustainability, social exclusion, gender empowerment, infrastructure, and other activities."],
+            ["Nature",
+             "It takes into account quantitative changes only.",
+             "It takes into account both quantitative and qualitative aspects of improvement."],
+            ["Scope",
+             "The scope of economic growth is narrow.",
+             "The scope of economic development is broad."],
+            ["Measurement",
+             "To measure the economic growth, GDP, GNP, etc. are considered.",
+             "To measure the economic development HDI, Gender inequality index, gender development Index etc. are considered."],
+        ], st))
+    add(DIV())
 
-    # ───────────────────────────────────────────────────────────
-    # 3. GROWTH vs DEVELOPMENT
-    # ───────────────────────────────────────────────────────────
-    add(_item_heading("3", "Economic Growth vs Economic Development", st))
+    # ═══ 4.0 Structural Changes ═══
+    add(H1("4.0 Economic Development and Structural Changes", st))
+    add(B("Econometricians have attempted to measure structural changes in economies as development proceeds.", st))
+    add(B("Much of the pioneering work in this field was done by Prof. Simon Kuznets on the basis of historical data.", st))
+    add(B("Hollis Chenery extended and refined the study of structural changes in an economy by using current data.", st))
+    add(NOTE("📌 List of Important Structural Changes Begotten by Economic Development", st))
+    ext(img(img_dir, "Untitled_3.png", 5))
+    ext(img(img_dir, "Untitled_4.png", 5))
+    add(DIV())
 
-    cw = COL_W / 3
-    tbl_data = [
-        [Paragraph("<b>Basis</b>",       ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE)),
-         Paragraph("<b>Growth</b>",      ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE)),
-         Paragraph("<b>Development</b>", ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE))],
-        [Paragraph("Meaning",     ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("Increase in output sustained over time.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("Quantitative AND qualitative changes.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5))],
-        [Paragraph("Nature",      ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("Quantitative only.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("Both quantitative and qualitative.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5))],
-        [Paragraph("Scope",       ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("Narrow.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("Broad.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5))],
-        [Paragraph("Measurement", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("GDP, GNP.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("HDI, GII, GDI.", ParagraphStyle("tc", fontName="Helvetica", fontSize=7.5))],
-    ]
-    comp_tbl = Table(tbl_data, colWidths=[cw]*3,
-        style=TableStyle([
-            ("BACKGROUND",    (0,0),(-1,0), BLUE),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1), [WHITE, LIGHT_BLUE]),
-            ("BOX",           (0,0),(-1,-1), 0.5, BLUE),
-            ("INNERGRID",     (0,0),(-1,-1), 0.3, colors.HexColor("#C5DCF0")),
-            ("TOPPADDING",    (0,0),(-1,-1), 3),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 3),
-            ("LEFTPADDING",   (0,0),(-1,-1), 4),
-            ("RIGHTPADDING",  (0,0),(-1,-1), 4),
-            ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
-        ]))
-    add(comp_tbl)
-    add(Spacer(1, 5))
-    add(_divider())
+    # ═══ 5.0 Indices ═══
+    add(H1("5.0 Indices to Measure Economic Development", st))
+    add(H2("5.1 Human Development Report and Its Components", st))
+    ext(img(img_dir, "Untitled_5.png", 5.5))
 
-    # ───────────────────────────────────────────────────────────
-    # 4. STRUCTURAL CHANGES
-    # ───────────────────────────────────────────────────────────
-    add(_item_heading("4", "Economic Development and Structural Changes", st))
-    add(_body(
-        "Pioneering work by <b>Prof. Simon Kuznets</b> (historical data). "
-        "<b>Hollis Chenery</b> extended it using current data.", st))
-    ext(_img(img_dir, "Untitled_3.png", 5))
-    ext(_img(img_dir, "Untitled_4.png", 5))
-    add(_divider())
+    add(H3("5.1.1 Human Development Index (HDI)", st))
+    add(B("Origin - 1990", st))
+    add(B("Released by - United Nations Development Program", st))
+    add(B("Purpose - to emphasize that people and their capabilities should be the ultimate criteria for assessing the development of a country, not economic growth alone", st))
+    add(B("Components of HDI -", st))
+    ext(img(img_dir, "Untitled_6.png", 5.5))
+    add(B("Coverage - 191 countries [subject to change]", st))
+    add(B("Index value - The index value of HDI varies between 0 (the lowest human development) to 1 (highest human development).", st))
 
-    # ───────────────────────────────────────────────────────────
-    # 5. INDICES
-    # ───────────────────────────────────────────────────────────
-    add(_item_heading("5", "Indices to Measure Economic Development", st))
-    ext(_img(img_dir, "Untitled_5.png", 5.5))
+    add(H3("5.1.2 Inequality-adjusted Human Development Index (IHDI)", st))
+    add(B("Origin - 2010", st))
+    add(B("Released by - United Nations Development Program", st))
+    add(B("Purpose - The Inequality-adjusted Human Development Index (IHDI) is a distinct and separate index that is related to the Human Development Index (HDI) but incorporates a correction factor for inequality within a country.", st))
+    add(B("While they are related and share similarities, the IHDI and HDI serve different purposes in evaluating human development.", st))
+    add(B("The HDI provides for the overall achievements of a country in health, education, and standard of living while the IHDI provides a more comprehensive assessment of human development by considering not only the average achievements but also the distribution of these achievements among the population.", st))
+    add(B("Components of IHDI -", st))
+    ext(img(img_dir, "Untitled_7.png", 5))
+    add(B("Coverage - The number of countries assessed in the Inequality-adjusted Human Development Index (IHDI) is generally the same as those assessed in the Human Development Index (HDI).", st))
+    add(B("However, the adjustment for inequality requires additional data, and in some cases, there might be missing or insufficient data to calculate the IHDI for all countries.", st))
+    add(B("While the intention is to cover the same set of countries in both the HDI and IHDI, limitations in available data may result in differences in the final number of countries for which both indices can be accurately calculated and reported.", st))
 
-    # 5.1 HDI
-    add(_sub("5.1.1  Human Development Index (HDI)", st))
-    for k, v in [
-        ("Origin", "1990  |  Released by: UNDP"),
-        ("Purpose", "People and capabilities — not just economic growth."),
-        ("Coverage", "191 countries  |  Range: 0 to 1"),
-    ]:
-        add(_bullet(f"<b>{k}:</b>  {v}", st))
-    ext(_img(img_dir, "Untitled_6.png", 5.5))
+    add(H3("5.1.3 Gender Development Index (GDI)", st))
+    add(B("Origin - 1990", st))
+    add(B("Released by - United Nations Development Program", st))
+    add(B("Purpose - To measure the achievements of a nation across health, education, and standard of living dimensions and its accessibility to males and females.", st))
+    add(B("Health - measured by female and male life expectancy at birth;", st))
+    add(B("Education - measured by female and male expected years of schooling for children and female and male mean years of schooling for adults ages 25 years and older;", st))
+    add(B("Command over Economic Resources - measured by female and male estimated earned income", st))
+    add(B("Components -", st))
+    ext(img(img_dir, "Screenshot_2023-12-11_153014.png", 5))
+    add(NOTE("Note: Pay attention to male and female categories in each dimension.", st))
+    add(B("Coverage - Typically, the number of countries assessed in the GDI is the same as or very similar to the number of countries assessed in the HDI because both indices are part of the same report and use the same dataset provided by the UNDP.", st))
+    add(B("However, variations might occur due to data availability and quality issues, which can affect the calculation and inclusion of certain countries in either index.", st))
 
-    # Nugget: HDI
-    ext(_nugget("HDI", "Components of HDI",
-        ["Long and healthy life — Life expectancy at birth",
-         "Knowledge — Expected & mean years of schooling",
-         "Standard of living — GNI per capita (PPP $)"], st))
+    add(H3("5.1.4 Gender Inequality Index (GII)", st))
+    add(B("Origin - 1990", st))
+    add(B("Released by - United Nations Development Report", st))
+    add(B("Purpose - GII reflects gender-based disadvantage in three dimensions— reproductive health, empowerment and the labor market.", st))
+    add(B("It shows the loss in potential human development due to inequality between female and male achievements in these dimensions.", st))
+    add(B("It ranges from 0, where women and men fare equally, to 1, where one gender fares as poorly as possible in all measured dimensions. Hence, a lower value means a better performance of a country.", st))
+    add(B("Components -", st))
+    ext(img(img_dir, "Untitled_8.png", 5))
+    add(B("Structure of the index -", st))
+    add(B("Female Gender Index - It is made up of female reproductive health index, female empowerment index, and female labor market index.", st))
+    add(B("Male Gender Index - It is made up of male empowerment index (male population with secondary education and male seats in parliament) and male labor market index (male labor force participation rate).", st))
+    add(B("Coverage - Typically, the number of countries assessed in the GII is the same as or very similar to the number of countries assessed in the HDI because both indices are part of the same report and use the same dataset provided by the UNDP.", st))
+    add(B("However, variations might occur due to data availability and quality issues, which can affect the calculation and inclusion of certain countries in either index.", st))
 
-    # 5.1.2 IHDI
-    add(_sub("5.1.2  Inequality-adjusted HDI (IHDI)", st))
-    ext(_img(img_dir, "Untitled_7.png", 4.5))
-    for pt in [
-        "<b>Origin:</b> 2010  |  Released by: UNDP",
-        "Adds a <b>correction factor for inequality</b> within a country.",
-        "HDI = averages; IHDI = distribution of achievements.",
-    ]:
-        add(_bullet(pt, st))
+    add(H3("5.1.5 Gender Social Norms Index", st))
+    add(B("Origin - 2019", st))
+    add(B("Released by - United Nation Development Program", st))
+    add(B("Purpose - The Gender Social Norms Index (GSNI) quantifies biases against women, capturing people's attitudes on women's roles along four key dimensions: political, educational, economic and physical integrity.", st))
+    add(B("Without tackling biased gender social norms, we will not achieve gender equality or the Sustainable Development Goals. Biased gender social norms—the undervaluation of women's capabilities and rights in society—constrain women's choices and opportunities by regulating behavior and setting the boundaries of what women are expected to do and be.", st))
+    add(B("Biased gender social norms are a major impediment to achieving gender equality and empowering all women and girls", st))
+    add(B("Components -", st))
+    ext(img(img_dir, "Untitled_9.png", 5))
+    add(B("Coverage - 91 countries [subject to change]", st))
 
-    # 5.1.3 GDI
-    add(_sub("5.1.3  Gender Development Index (GDI)", st))
-    ext(_img(img_dir, "Screenshot_2023-12-11_153014.png", 4.5))
-    add(_bullet("<b>Origin:</b> 1990  |  Released by: UNDP", st))
-    add(_bullet(
-        "<b>Purpose:</b> Measure health, education, and standard of living "
-        "separately for men and women.", st))
+    add(H3("5.1.6 Multidimensional Poverty Index", st))
+    add(B("Origin - 2010", st))
+    add(B("Released by - Oxford Poverty and Human Development Initiative (OPHI) and UN Development Program (UNDP)", st))
+    add(B("Publication - Annual in Human Development Report", st))
+    add(B("Purpose - The MPI is a high resolution lens on poverty. Knowing not just who is poor but how they are poor is essential for effective human development program and policies. It is useful because -", st))
+    for t in ["It shows all the deprivations",
+              "Identify the poorest people",
+              "Show which deprivation combinations are most common",
+              "Reflect the results of effective policy interventions quickly"]:
+        add(B(t, st))
+    add(B("Components -", st))
+    ext(img(img_dir, "Untitled_10.png", 5))
+    add(B("Structure of the index -", st))
+    ext(img(img_dir, "Untitled_11.png", 6))
+    add(B("Coverage - Nearly 100 countries [subject to change]", st))
 
-    # 5.1.4 GII
-    add(_sub("5.1.4  Gender Inequality Index (GII)", st))
-    ext(_img(img_dir, "Untitled_8.png", 4.5))
-    for pt in [
-        "<b>Origin:</b> 1990  |  Released by: UNDP",
-        "Reflects gender disadvantage across reproductive health, empowerment, labour market.",
-        "Range: 0 (equality) to 1 (max inequality) — lower = better.",
-    ]:
-        add(_bullet(pt, st))
+    add(H2("5.2 Other Indices to Measure Economic Development", st))
 
-    # Nugget: GII
-    ext(_nugget("GII", "Components of GII",
-        ["Health: Maternal mortality ratio, Adolescent birth rate",
-         "Empowerment: Parliamentary seats, Secondary education",
-         "Labour Market: Labour force participation rate"], st))
+    add(H3("5.2.1 Genuine Progress Indicator (GPI)", st))
+    add(B("Meaning - The Genuine Progress Indicator (GPI) is an alternative metric to Gross Domestic Product (GDP) that attempts to measure economic progress, well-being, and sustainability.", st))
+    add(B("It was developed as a response to the limitations of GDP as a sole measure of a country's economic performance.", st))
+    add(B("GDP vs GPI - GDP measures the total monetary value of all finished goods and services produced within a country's borders in a specific time period.", st))
+    add(B("However, it does not consider factors such as income distribution, environmental degradation, household work, volunteer work, and social factors, among others.", st))
+    add(B("The Genuine Progress Indicator seeks to address these limitations by considering a broader range of economic, social, and environmental factors in its calculation.", st))
+    add(B("Released by - There isn't a single central authority or organization responsible for releasing the GPI for all countries.", st))
+    add(B("The GPI was conceptualized and developed by researchers to provide a more comprehensive measure of societal progress that goes beyond the limitations of GDP.", st))
+    add(B("Several independent research institutions, non-governmental organizations (NGOs), and academic entities have been involved in calculating and publishing GPI values for specific regions, countries, or localities.", st))
 
-    # 5.1.5 GSNI
-    add(_sub("5.1.5  Gender Social Norms Index (GSNI)", st))
-    ext(_img(img_dir, "Untitled_9.png", 4.5))
-    for pt in [
-        "<b>Origin:</b> 2019  |  Released by: UNDP",
-        "Quantifies biases against women across 4 dimensions.",
-        "Coverage: 91 countries (subject to change).",
-    ]:
-        add(_bullet(pt, st))
+    add(H3("5.2.2 World Happiness Index (WHI)", st))
+    add(B("Origin - 2012", st))
+    add(B("Released by - UN Sustainable Development Solutions Network", st))
+    add(B("Purpose - Success of countries should be judged by the happiness of their people. Countries have also come to a consensus on how to quantifiably measure happiness.", st))
+    add(B("Components -", st))
+    ext(img(img_dir, "Untitled_12.png", 7))
 
-    # 5.1.6 MPI
-    add(_sub("5.1.6  Multidimensional Poverty Index (MPI)", st))
-    ext(_img(img_dir, "Untitled_10.png", 4.5))
-    ext(_img(img_dir, "Untitled_11.png", 6))
-    for pt in [
-        "<b>Origin:</b> 2010  |  Released by: OPHI and UNDP",
-        "Shows <i>how</i> people are poor — all deprivations identified.",
-        "Coverage: ~100 countries (subject to change).",
-    ]:
-        add(_bullet(pt, st))
+    add(H3("5.2.3 OECD Better Life Index", st))
+    add(B("Purpose - The OECD Better Life Index is designed to provide a broader perspective on what constitutes a good life beyond economic indicators like Gross Domestic Product (GDP).", st))
+    add(B("Components -", st))
+    ext(img(img_dir, "Screenshot_2023-12-11_114429.png", 7))
+    add(B("Ranking - The Better Life Index doesn't provide a single ranking but rather allows users to create their own personalized index by giving different weights to these 11 dimensions.", st))
+    add(B("Individuals can use the Better Life Index tool available on the OECD website to customize and weigh these topics according to their personal preferences and values.", st))
+    add(B("They can then compare countries' performances based on these preferences, allowing users to see how different countries fare in areas that matter most to them.", st))
 
-    # Nugget: MPI
-    ext(_nugget("MPI", "Dimensions of MPI",
-        ["Health (1/3): Nutrition, Child mortality",
-         "Education (1/3): Years of schooling, School attendance",
-         "Living Standards (1/3): Cooking fuel, Sanitation, "
-         "Drinking water, Electricity, Housing, Assets"], st))
+    add(H3("5.2.4 The Physical Quality of Life Index (PQLI)", st))
+    add(B("Origin - The Physical Quality of Life Index (PQLI) was a composite measure developed by the economist Morris David Morris in the 1970s as an attempt to assess the overall quality of life in different countries.", st))
+    add(B("Components -", st))
+    add(B("Basic Literacy Rate: The percentage of adults in a country who could read and write.", st))
+    add(B("Life Expectancy at Age 1: The average number of years a newborn could expect to live if the prevailing mortality patterns remained the same throughout its life.", st))
+    add(B("Infant Mortality Rate: The number of deaths of infants under one year old per 1,000 live births.", st))
+    add(B("Score Range - The PQLI scores ranged from 0 to 100, with higher scores indicating a better overall quality of life.", st))
+    add(DIV())
 
-    # 5.2 Other indices
-    add(_sub("5.2  Other Indices", st))
+    # ═══ 6.0 Developed vs Developing ═══
+    add(H1("6.0 Developed vs Developing Economies", st))
 
-    add(_sub("5.2.2  World Happiness Index (WHI)", st))
-    ext(_img(img_dir, "Untitled_12.png", 7))
-    for pt in [
-        "<b>Origin:</b> 2012  |  Released by: UN SDSN",
-        "7 components: Social Support, Life Expectancy, Freedom, "
-        "Generosity, GDP per capita, Corruption, Dystopia.",
-    ]:
-        add(_bullet(pt, st))
+    add(H2("6.1 Introduction", st))
+    add(B("World Bank's World Development Report categorizes economies in three categories on the basis of income, which are high income, middle income and low income economies.", st))
+    add(B("Usually, high income countries are known as developed/advanced economies while low income countries are known as underdeveloped economies.", st))
+    add(B("Developed or advanced economies are also characterized by high standard of living, universal and quality education, better health care facilities and high life expectancy.", st))
+    add(B("Further, the underdeveloped economies showing high potential of growth in terms of their natural, physical and human resources are often referred to as developing economies.", st))
+    add(B("Economists also use the terms, first world, second world and third world for the developed, socialist, industrialist countries and underdeveloped economies respectively.", st))
 
-    add(_sub("5.2.3  OECD Better Life Index", st))
-    ext(_img(img_dir, "Screenshot_2023-12-11_114429.png", 7))
-    for pt in [
-        "11 dimensions — no single ranking; users set own weights.",
-        "Dimensions: Housing, Income, Jobs, Community, Education, "
-        "Environment, Governance, Health, Life Satisfaction, Safety, Work-Life Balance.",
-    ]:
-        add(_bullet(pt, st))
+    add(H2("6.2 Classification of Countries on the Basis of Per Capita Income", st))
+    add(H3("6.2.1 Income-based Classification", st))
+    add(B("World Bank has classified economies into four categories for the current 2024 fiscal year -", st))
+    ext(comparison_table(
+        ["Category", "GNI Per Capita Income (in US $)"],
+        [
+            ["Low income",          "$1,135 or less in 2022"],
+            ["Low middle income",   "$1,136 and $4,465"],
+            ["Upper middle income", "$4,466 and $13,845"],
+            ["High income",         "$13,846 or more"],
+        ], st))
+    add(NOTE("Note: The above-mentioned classification is subject to change. You can check the updated classification on World Bank's website - https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups", st))
 
-    for title, desc in [
-        ("5.2.1  Genuine Progress Indicator (GPI)",
-         "Alternative to GDP; accounts for income distribution, "
-         "environmental degradation, household/volunteer work."),
-        ("5.2.4  Physical Quality of Life Index (PQLI)",
-         "Morris David Morris, 1970s. Components: Basic Literacy Rate, "
-         "Life Expectancy at Age 1, Infant Mortality Rate. Scores 0–100."),
-    ]:
-        add(_sub(title, st))
-        add(_body(desc, st))
+    add(H3("6.2.2 Development-based Classification", st))
+    add(B("Developed country - An industrialized country (or post-industrial country), more developed country or More Economically Developed Country (MEDC) is a sovereign state that has a developed economy and advanced technological infrastructure relative to other less industrialized nations. Example - USA", st))
+    add(B("Developing country - A relatively less industrialized nation which is based on primary activities but is thriving for new industrial development such as services (India) or mass production. Example - China and India", st))
+    add(B("Least Developed Countries - Least Developed Countries (LDCs) are low-income countries confronting severe structural impediments to sustainable development. They are highly vulnerable to economic and environmental shocks and have low levels of human assets. Examples - Somalia, Sudan, etc.", st))
 
-    add(_divider())
+    add(H2("6.3 Common Characteristics of Developing Countries", st))
+    for t in ["Low GNP Per Capita","Scarcity of Capital",
+              "Rapid population growth and high dependency burden",
+              "Low Levels of Productivity","Technological Backwardness",
+              "High Levels of Unemployment","Low Human Wellbeing",
+              "Wide Income Inequality","High Poverty",
+              "Agrarian Economy","Low Participation in Foreign Trade"]:
+        add(B(t, st))
+    add(DIV())
 
-    # ───────────────────────────────────────────────────────────
-    # 6. DEVELOPED vs DEVELOPING
-    # ───────────────────────────────────────────────────────────
-    add(_item_heading("6", "Developed vs Developing Economies", st))
-    add(_body(
-        "World Bank categorises economies into <b>high income</b>, <b>middle income</b>, "
-        "and <b>low income</b>.", st))
-
-    add(_sub("6.2.1  World Bank Income Classification (2024)", st))
-    cw2 = COL_W / 2
-    wb_data = [
-        [Paragraph("<b>Category</b>", ParagraphStyle("th2", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE)),
-         Paragraph("<b>GNI Per Capita (US$)</b>", ParagraphStyle("th2", fontName="Helvetica-Bold", fontSize=7.5, textColor=WHITE))],
-        [Paragraph("Low income",           ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("$1,135 or less",       ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5))],
-        [Paragraph("Lower middle income",  ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("$1,136 – $4,465",      ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5))],
-        [Paragraph("Upper middle income",  ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("$4,466 – $13,845",     ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5))],
-        [Paragraph("High income",          ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5)),
-         Paragraph("$13,846 or more",      ParagraphStyle("tc2", fontName="Helvetica", fontSize=7.5))],
-    ]
-    wb_tbl = Table(wb_data, colWidths=[cw2]*2,
-        style=TableStyle([
-            ("BACKGROUND",    (0,0),(-1,0), BLUE),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1), [WHITE, LIGHT_BLUE]),
-            ("BOX",           (0,0),(-1,-1), 0.5, BLUE),
-            ("INNERGRID",     (0,0),(-1,-1), 0.3, colors.HexColor("#C5DCF0")),
-            ("TOPPADDING",    (0,0),(-1,-1), 3),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 3),
-            ("LEFTPADDING",   (0,0),(-1,-1), 4),
-            ("RIGHTPADDING",  (0,0),(-1,-1), 4),
-        ]))
-    add(wb_tbl)
-    add(Spacer(1, 4))
-
-    add(_sub("6.2.2  Development-based Classification", st))
-    for pt in [
-        "<b>Developed (MEDC)</b> — advanced economy, strong tech infrastructure. E.g. USA.",
-        "<b>Developing</b> — less industrialised, moving toward services/production. E.g. India.",
-        "<b>Least Developed (LDCs)</b> — severe structural impediments. E.g. Somalia, Sudan.",
-    ]:
-        add(_bullet(pt, st))
-
-    add(_sub("6.3  Common Characteristics of Developing Countries", st))
-    for c in ["Low GNP Per Capita", "Scarcity of Capital",
-              "Rapid population growth", "Low Productivity",
-              "Technological Backwardness", "High Unemployment",
-              "Low Human Wellbeing", "Wide Income Inequality",
-              "High Poverty", "Agrarian Economy",
-              "Low Participation in Foreign Trade"]:
-        add(_bullet(c, st))
-
-    add(_divider())
-
-    # ───────────────────────────────────────────────────────────
-    # 7. COMPOSITE DEVELOPMENT INDEX
-    # ───────────────────────────────────────────────────────────
-    add(_item_heading("7", "Composite Development Index", st))
-    add(_body(
-        "The <b>Raghuram Rajan Committee (2013)</b> proposed a <b>Composite Development "
-        "Index</b> to determine underdevelopment of Indian states with "
-        "<b>10 equal-weight sub-components</b>.", st))
-
-    for i, sc in enumerate([
-        "Monthly per-capita consumption expenditure", "Education", "Health",
-        "Household amenities", "Poverty rate", "Female literacy",
-        "Percentage of SC/ST population", "Urbanisation rate",
-        "Financial inclusion", "Connectivity",
-    ], 1):
-        add(_bullet(f"<b>{i}.</b>  {sc}", st))
-
-    # Final nugget
-    ext(_nugget("Reminders", "Key Points to Remember",
-        ["Economic Growth ⊂ Economic Development.",
-         "HDI = Health + Education + Standard of Living.",
-         "Lower GII = better gender equality.",
-         "PQLI = first composite alternative to GDP.",
-         "Raghuram Rajan Committee (2013) → Composite Development Index."], st))
+    # ═══ 7.0 Composite Development Index ═══
+    add(H1("7.0 Composite Development Index", st))
+    add(B("The Raghuram Rajan Committee submitted its report on a new Underdevelopment Index called Composite Development Index in 2013.", st))
+    add(B("The committee suggested this index to determine underdevelopment of states.", st))
+    add(B("The index had 10 sub-component carrying equal weightage -", st))
+    ext(nugget("Composite Development Index — 10 Sub-components",
+        ["Monthly per-capita consumption expenditure",
+         "Education",
+         "Health",
+         "Household amenities",
+         "Poverty rate",
+         "Female literacy",
+         "Percentage of SC/ST population",
+         "Urbanisation rate",
+         "Financial inclusion",
+         "Connectivity"], st))
 
     return s
 
 
-# ── Document builder ──────────────────────────────────────────────────────────
-def generate(output_path: str = "Economic_Growth_and_Development.pdf",
-             img_dir: str | None = None) -> str:
+# ── Generate ──────────────────────────────────────────────────────────────────
+def generate(output_path="Economic_Growth_and_Development.pdf", img_dir=None):
     if img_dir is None:
         img_dir = Path(__file__).parent
     img_dir = Path(img_dir)
-    print(f"[INFO] img_dir  = {img_dir}")
-    print(f"[INFO] output   = {output_path}")
+    print(f"[INFO] img_dir = {img_dir}")
+    print(f"[INFO] output  = {output_path}")
 
-    page_canvas = _PageCanvas(img_dir)
-    st = _styles()
-    content = _build_content(st, img_dir)
+    canvas_cb = _Canvas(img_dir)
+    st = ST()
+    story = build_story(st, img_dir)
 
-    # ── Two-column page layout ────────────────────────────────────────────────
-    left_frame = Frame(
-        MARGIN_SIDE, MARGIN_BOTTOM,
-        COL_W, PAGE_H - MARGIN_TOP - MARGIN_BOTTOM,
-        leftPadding=0, rightPadding=0,
-        topPadding=0, bottomPadding=0,
-        id="left"
-    )
-    right_frame = Frame(
-        MARGIN_SIDE + COL_W + COL_GAP, MARGIN_BOTTOM,
-        COL_W, PAGE_H - MARGIN_TOP - MARGIN_BOTTOM,
-        leftPadding=0, rightPadding=0,
-        topPadding=0, bottomPadding=0,
-        id="right"
-    )
-
-    two_col_template = PageTemplate(
-        id="TwoCol",
-        frames=[left_frame, right_frame],
-        onPage=page_canvas.draw,
-    )
+    left  = Frame(MARGIN_SIDE, MARGIN_BOTTOM,
+                  COL_W, PAGE_H - MARGIN_TOP - MARGIN_BOTTOM,
+                  leftPadding=0, rightPadding=0,
+                  topPadding=0, bottomPadding=0, id="left")
+    right = Frame(MARGIN_SIDE + COL_W + COL_GAP, MARGIN_BOTTOM,
+                  COL_W, PAGE_H - MARGIN_TOP - MARGIN_BOTTOM,
+                  leftPadding=0, rightPadding=0,
+                  topPadding=0, bottomPadding=0, id="right")
 
     doc = BaseDocTemplate(
-        output_path,
-        pagesize=A4,
-        pageTemplates=[two_col_template],
+        output_path, pagesize=A4,
+        pageTemplates=[PageTemplate(id="2col",
+                                    frames=[left, right],
+                                    onPage=canvas_cb)],
         title=f"{SUBJECT} – {CHAPTER}",
-        author="Anuj Jindal",
-        subject=CHAPTER,
+        author="Anuj Jindal", subject=CHAPTER,
     )
-
-    doc.build(content)
+    doc.build(story)
     kb = Path(output_path).stat().st_size // 1024
-    print(f"[INFO] Done ✓  {kb} KB → {output_path}")
+    print(f"[INFO] Done ✓  {kb} KB")
     return output_path
 
 
